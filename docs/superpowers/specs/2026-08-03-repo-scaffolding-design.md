@@ -88,7 +88,7 @@ becomes viable as each service matures.
 
 ## Frontend
 
-Vite + React 18 + TypeScript + Tailwind CSS skeleton. One app for the whole
+Vite + React 19 + TypeScript + Tailwind CSS skeleton. One app for the whole
 platform (not split per backend service) — it talks to services through the nginx
 gateway using `/api/<service>/...` paths, so no CORS config or per-service base
 URLs are needed in the frontend.
