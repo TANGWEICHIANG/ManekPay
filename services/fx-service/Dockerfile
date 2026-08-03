@@ -1,9 +1,7 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-COPY services/fx-service/pom.xml services/fx-service/pom.xml
-RUN mvn -q -pl services/fx-service -DskipTests dependency:go-offline
-COPY services/fx-service/src services/fx-service/src
+COPY services/ services/
 RUN mvn -q -pl services/fx-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine

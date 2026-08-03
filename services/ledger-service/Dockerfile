@@ -1,9 +1,7 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-COPY services/ledger-service/pom.xml services/ledger-service/pom.xml
-RUN mvn -q -pl services/ledger-service -DskipTests dependency:go-offline
-COPY services/ledger-service/src services/ledger-service/src
+COPY services/ services/
 RUN mvn -q -pl services/ledger-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine

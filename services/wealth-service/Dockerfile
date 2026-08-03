@@ -1,9 +1,7 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-COPY services/wealth-service/pom.xml services/wealth-service/pom.xml
-RUN mvn -q -pl services/wealth-service -DskipTests dependency:go-offline
-COPY services/wealth-service/src services/wealth-service/src
+COPY services/ services/
 RUN mvn -q -pl services/wealth-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine

@@ -1,9 +1,7 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 COPY pom.xml .
-COPY services/risk-service/pom.xml services/risk-service/pom.xml
-RUN mvn -q -pl services/risk-service -DskipTests dependency:go-offline
-COPY services/risk-service/src services/risk-service/src
+COPY services/ services/
 RUN mvn -q -pl services/risk-service -am -DskipTests package
 
 FROM eclipse-temurin:21-jre-alpine
