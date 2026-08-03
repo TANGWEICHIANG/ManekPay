@@ -1,5 +1,7 @@
 # ManekPay
 
+All in one fintech web application
+
 ## Running locally
 
 1. Start infra: `docker compose up -d postgres redis kafka nginx`
