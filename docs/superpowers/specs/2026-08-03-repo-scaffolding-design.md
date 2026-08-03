@@ -24,11 +24,11 @@ ManekPay/
 ├── docker-compose.yml
 ├── pom.xml                          # Maven parent (packaging=pom), Java 21, Spring Boot 3.x BOM
 ├── services/
-│   ├── manek-ledger-service/
-│   ├── selat-fx-service/
-│   ├── kupang-vaults-service/
-│   ├── beadguard-risk-service/
-│   └── manek-wealth-service/
+│   ├── ledger-service/
+│   ├── fx-service/
+│   ├── vaults-service/
+│   ├── risk-service/
+│   └── wealth-service/
 ├── frontend/                        # single React app (not one frontend per service)
 ├── gateway/
 │   └── nginx.conf
@@ -49,11 +49,11 @@ No controllers, entities, repositories, or dependencies beyond
 
 | Service | Port |
 |---|---|
-| manek-ledger-service | 8081 |
-| selat-fx-service | 8082 |
-| kupang-vaults-service | 8083 |
-| beadguard-risk-service | 8084 |
-| manek-wealth-service | 8085 |
+| ledger-service | 8081 |
+| fx-service | 8082 |
+| vaults-service | 8083 |
+| risk-service | 8084 |
+| wealth-service | 8085 |
 | nginx gateway | 8080 |
 | frontend (Vite dev server) | 5173 |
 | postgres | 5432 |
@@ -71,11 +71,11 @@ No controllers, entities, repositories, or dependencies beyond
   topics created yet; topic creation happens when producers/consumers are built.
 - **nginx**: the API gateway. Path-based reverse proxy:
   - `/` → frontend (or the built static frontend, once it exists)
-  - `/api/ledger/*` → `manek-ledger-service:8081`
-  - `/api/fx/*` → `selat-fx-service:8082`
-  - `/api/vaults/*` → `kupang-vaults-service:8083`
-  - `/api/risk/*` → `beadguard-risk-service:8084`
-  - `/api/wealth/*` → `manek-wealth-service:8085`
+  - `/api/ledger/*` → `ledger-service:8081`
+  - `/api/fx/*` → `fx-service:8082`
+  - `/api/vaults/*` → `vaults-service:8083`
+  - `/api/risk/*` → `risk-service:8084`
+  - `/api/wealth/*` → `wealth-service:8085`
 
   Chosen over a Spring Cloud Gateway module to avoid running a 6th JVM service for
   what a single `nginx.conf` handles. Revisit only if gateway-level auth/routing
