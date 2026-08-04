@@ -1,4 +1,5 @@
 target/
 .env
 docs/
+sql/
 CLAUDE.local.md
