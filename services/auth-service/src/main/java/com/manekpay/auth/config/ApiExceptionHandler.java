@@ -3,6 +3,8 @@ package com.manekpay.auth.config;
 import com.manekpay.auth.auth.DuplicateEmailException;
 import com.manekpay.auth.auth.InvalidCredentialsException;
 import com.manekpay.auth.auth.InvalidTokenException;
+import com.manekpay.auth.identity.ForbiddenInquiryAccessException;
+import com.manekpay.auth.identity.InquiryNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(InvalidTokenException.class)
     public ResponseEntity<ErrorResponse> handleInvalidToken(InvalidTokenException ex, HttpServletRequest request) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InquiryNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleInquiryNotFound(InquiryNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ForbiddenInquiryAccessException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenInquiryAccessException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request) {
