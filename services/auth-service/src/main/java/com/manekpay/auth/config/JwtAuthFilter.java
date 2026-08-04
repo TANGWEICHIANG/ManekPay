@@ -1,6 +1,6 @@
 package com.manekpay.auth.config;
 
-import com.manekpay.auth.auth.JwtService;
+import com.manekpay.auth.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

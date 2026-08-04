@@ -1,10 +1,11 @@
 package com.manekpay.auth.config;
 
-import com.manekpay.auth.auth.DuplicateEmailException;
-import com.manekpay.auth.auth.InvalidCredentialsException;
-import com.manekpay.auth.auth.InvalidTokenException;
-import com.manekpay.auth.identity.ForbiddenInquiryAccessException;
-import com.manekpay.auth.identity.InquiryNotFoundException;
+import com.manekpay.auth.dto.ErrorResponse;
+import com.manekpay.auth.exception.DuplicateEmailException;
+import com.manekpay.auth.exception.InvalidCredentialsException;
+import com.manekpay.auth.exception.InvalidTokenException;
+import com.manekpay.auth.exception.ForbiddenInquiryAccessException;
+import com.manekpay.auth.exception.InquiryNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

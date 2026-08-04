@@ -1,7 +1,8 @@
 package com.manekpay.auth.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.manekpay.auth.auth.JwtService;
+import com.manekpay.auth.dto.ErrorResponse;
+import com.manekpay.auth.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
