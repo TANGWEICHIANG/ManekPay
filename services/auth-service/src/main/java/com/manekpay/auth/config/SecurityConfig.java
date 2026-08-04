@@ -40,7 +40,7 @@ public class SecurityConfig {
                     objectMapper.writeValue(response.getWriter(), body);
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/login", "/refresh", "/logout", "/.well-known/jwks.json", "/actuator/health")
+                        .requestMatchers("/register", "/login", "/refresh", "/logout", "/.well-known/jwks.json", "/actuator/health", "/error")
                         .permitAll()
                         .anyRequest().authenticated()
                 )

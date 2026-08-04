@@ -6,6 +6,7 @@ import com.manekpay.auth.customer.CustomerRepository;
 import com.manekpay.auth.customer.KycStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,7 +75,8 @@ public class InquiryController {
         return submitVerification(inquiry, verification, result);
     }
 
-    private VerificationSummary submitVerification(Inquiry inquiry, Verification verification, VerificationResult result) {
+    @Transactional
+    protected VerificationSummary submitVerification(Inquiry inquiry, Verification verification, VerificationResult result) {
         verification.setStatus(result.passed() ? VerificationStatus.PASSED : VerificationStatus.FAILED);
         verification.setResultDetail(result.resultDetailJson());
         Verification saved = verificationRepository.save(verification);
@@ -83,6 +85,9 @@ public class InquiryController {
         boolean hasPassedGovernmentId = all.stream().anyMatch(v -> v.getType() == VerificationType.GOVERNMENT_ID && v.getStatus() == VerificationStatus.PASSED);
         boolean hasPassedSelfie = all.stream().anyMatch(v -> v.getType() == VerificationType.SELFIE && v.getStatus() == VerificationStatus.PASSED);
 
+        // NOTE: this updates the database only — the customer's currently-held access token
+        // (if any) still carries whatever kycStatus was true at login time, for up to its
+        // remaining lifetime. See JwtService.issueAccessToken's note.
         if (hasPassedGovernmentId && hasPassedSelfie) {
             inquiry.setStatus(InquiryStatus.APPROVED);
             inquiryRepository.save(inquiry);

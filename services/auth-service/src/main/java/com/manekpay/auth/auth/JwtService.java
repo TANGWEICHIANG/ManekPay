@@ -27,6 +27,11 @@ public class JwtService {
         this.publicKey = publicKey;
     }
 
+    // NOTE: the `kycStatus` claim below is a snapshot at token-issue time only — it does
+    // NOT update when a customer's KYC status changes mid-token-lifetime (e.g. auto-approval
+    // completing). Never use this claim to gate an authorization decision; always re-check
+    // the customer's live kycStatus in the database for anything that matters (e.g. before
+    // allowing a financial transaction in a later phase).
     public String issueAccessToken(UUID customerId, String email, KycStatus kycStatus) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ACCESS_TOKEN_TTL.toMillis());
