@@ -72,7 +72,10 @@ class LoginFlowIntegrationTest {
 
     @Test
     void meWithoutTokenReturns401() throws Exception {
-        mockMvc.perform(get("/me")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.emptyString())));
     }
 
     @Test
