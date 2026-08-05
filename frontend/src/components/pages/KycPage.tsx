@@ -80,6 +80,11 @@ export function KycPage() {
           <p className="text-foreground">
             Verify your identity to unlock all ManekPay features. You'll need a government ID and a selfie.
           </p>
+          {createInquiry.isError && (
+            <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              {createInquiry.error instanceof Error ? createInquiry.error.message : 'Could not start verification'}
+            </p>
+          )}
           <Button onClick={handleStart} isLoading={createInquiry.isPending}>
             Start verification
           </Button>
@@ -93,6 +98,11 @@ export function KycPage() {
             {lastResult && lastResult.status === VerificationStatus.FAILED && (
               <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
                 Verification failed: {lastResult.resultDetail ?? 'please check your details and try again.'}
+              </p>
+            )}
+            {submitGovernmentId.isError && (
+              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+                {submitGovernmentId.error instanceof Error ? submitGovernmentId.error.message : 'Submission failed'}
               </p>
             )}
             <Input label="NRIC (e.g. 900101-14-5678)" required value={nric} onChange={(e) => setNric(e.target.value)} />
@@ -113,6 +123,11 @@ export function KycPage() {
             {lastResult && lastResult.status === VerificationStatus.FAILED && (
               <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
                 Verification failed: {lastResult.resultDetail ?? 'please try again.'}
+              </p>
+            )}
+            {submitSelfie.isError && (
+              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+                {submitSelfie.error instanceof Error ? submitSelfie.error.message : 'Submission failed'}
               </p>
             )}
             <FileInput label="Selfie photo" required onChange={setSelfieImage} />

@@ -31,7 +31,9 @@ async function rawRequest(path: string, options: RequestOptions, accessToken: st
   });
 }
 
-async function tryRefresh(): Promise<boolean> {
+let refreshInFlight: Promise<boolean> | null = null;
+
+async function doRefresh(): Promise<boolean> {
   const { refreshToken, setTokens, clearSession } = useAuthStore.getState();
   if (!refreshToken) {
     clearSession();
@@ -49,6 +51,17 @@ async function tryRefresh(): Promise<boolean> {
   const data: TokenResponse = await res.json();
   setTokens(data.accessToken, data.refreshToken);
   return true;
+}
+
+// Refresh tokens are single-use (rotated server-side), so concurrent 401s must
+// share one in-flight refresh instead of each consuming/invalidating the token.
+function tryRefresh(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
 }
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
