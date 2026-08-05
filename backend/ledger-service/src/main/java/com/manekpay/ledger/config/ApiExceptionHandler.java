@@ -2,7 +2,12 @@ package com.manekpay.ledger.config;
 
 import com.manekpay.ledger.dto.ErrorResponse;
 import com.manekpay.ledger.exception.DuplicateProxyException;
+import com.manekpay.ledger.exception.InsufficientBalanceException;
+import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.ProxyNotFoundException;
+import com.manekpay.ledger.exception.RecipientNotFoundException;
+import com.manekpay.ledger.exception.SelfTransferException;
+import com.manekpay.ledger.exception.TransferNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +37,31 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ProxyNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleProxyNotFound(ProxyNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(RecipientNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleRecipientNotFound(RecipientNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(TransferNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleTransferNotFound(TransferNotFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(SelfTransferException.class)
+    public ResponseEntity<ErrorResponse> handleSelfTransfer(SelfTransferException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientBalance(InsufficientBalanceException ex, HttpServletRequest request) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(KycNotApprovedException.class)
+    public ResponseEntity<ErrorResponse> handleKycNotApproved(KycNotApprovedException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
     }
 
     @Override
