@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --color-background: 255 255 255;
+  --color-foreground: 10 10 10;
+  --color-border: 229 229 229;
+  --color-primary: 79 70 229;
+  --color-success: 22 163 74;
+  --color-warning: 217 119 6;
+  --color-danger: 220 38 38;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: 10 10 10;
+    --color-foreground: 245 245 245;
+    --color-border: 39 39 42;
+    --color-primary: 129 140 248;
+    --color-success: 74 222 128;
+    --color-warning: 251 191 36;
+    --color-danger: 248 113 113;
+  }
+}
