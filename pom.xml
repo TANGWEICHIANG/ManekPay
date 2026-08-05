@@ -50,11 +50,11 @@
   </build>
 
   <modules>
-    <module>services/ledger-service</module>
-    <module>services/fx-service</module>
-    <module>services/vaults-service</module>
-    <module>services/risk-service</module>
-    <module>services/wealth-service</module>
-    <module>services/auth-service</module>
+    <module>backend/ledger-service</module>
+    <module>backend/fx-service</module>
+    <module>backend/vaults-service</module>
+    <module>backend/risk-service</module>
+    <module>backend/wealth-service</module>
+    <module>backend/auth-service</module>
   </modules>
 </project>
