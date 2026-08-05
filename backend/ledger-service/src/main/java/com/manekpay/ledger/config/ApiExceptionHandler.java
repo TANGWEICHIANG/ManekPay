@@ -1,6 +1,7 @@
 package com.manekpay.ledger.config;
 
 import com.manekpay.ledger.dto.ErrorResponse;
+import com.manekpay.ledger.exception.AuthServiceUnavailableException;
 import com.manekpay.ledger.exception.DuplicateProxyException;
 import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
@@ -11,6 +12,7 @@ import com.manekpay.ledger.exception.TransferNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -62,6 +64,22 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(KycNotApprovedException.class)
     public ResponseEntity<ErrorResponse> handleKycNotApproved(KycNotApprovedException ex, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AuthServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleAuthServiceUnavailable(AuthServiceUnavailableException ex, HttpServletRequest request) {
+        log.error("auth-service unreachable on {} {}", request.getMethod(), request.getRequestURI(), ex.getCause());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    // Backstop for unique-constraint races that slip past an in-application pre-check (e.g. two
+    // concurrent POST /transfers with the same X-Idempotency-Key both passing the Redis cache-miss
+    // check before either commits - the DB's unique(idempotency_key) constraint, V4 migration,
+    // is what actually prevents the double-debit; this just turns the loser's raw insert failure
+    // into a sane response instead of an opaque 500).
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "A conflicting request was already processed - please retry", request);
     }
 
     @Override

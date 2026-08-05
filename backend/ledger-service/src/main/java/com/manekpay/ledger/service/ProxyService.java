@@ -5,6 +5,7 @@ import com.manekpay.ledger.entity.ProxyType;
 import com.manekpay.ledger.exception.DuplicateProxyException;
 import com.manekpay.ledger.exception.ProxyNotFoundException;
 import com.manekpay.ledger.repository.AccountProxyRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +26,16 @@ public class ProxyService {
         if (proxyRepository.existsByTypeAndValue(type, value)) {
             throw new DuplicateProxyException();
         }
-        return proxyRepository.save(new AccountProxy(accountId, type, value));
+        // The existsByTypeAndValue check above doesn't prevent a genuine race between two
+        // concurrent requests linking the same identifier - the unique(type, value) index
+        // (V3 migration) is the real guard. saveAndFlush forces the insert (and any
+        // constraint violation) to happen synchronously here, not at a later, uncatchable
+        // flush point, so the race surfaces as the correct 409 instead of a raw 500.
+        try {
+            return proxyRepository.saveAndFlush(new AccountProxy(accountId, type, value));
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateProxyException();
+        }
     }
 
     public List<AccountProxy> listProxies(UUID accountId) {
