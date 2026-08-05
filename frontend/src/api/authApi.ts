@@ -1,36 +1,42 @@
+import { apiRequest } from './apiClient';
 import { API_PATHS } from '../constants/paths';
-import { LoginRequest, RegisterRequest, TokenResponse, UserProfile } from '../store/models/auth.model';
-
-// Constructed dynamically using Vite environment variables
-const BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api`;
-
+import type { LoginRequest, RegisterRequest, RegisterResponse, TokenResponse, UserProfile } from '../store/models/auth.model';
+import type { GovernmentIdFields, InquiryResponse, VerificationSummary } from '../store/models/identity.model';
 
 export const authApi = {
-  login: async (credentials: LoginRequest): Promise<TokenResponse> => {
-    const res = await fetch(`${BASE_URL}${API_PATHS.AUTH.LOGIN}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(credentials),
-    });
-    if (!res.ok) throw new Error('Invalid credentials');
-    return res.json();
+  login: (credentials: LoginRequest): Promise<TokenResponse> =>
+    apiRequest(API_PATHS.AUTH.LOGIN, { method: 'POST', body: credentials }),
+
+  register: (data: RegisterRequest): Promise<RegisterResponse> =>
+    apiRequest(API_PATHS.AUTH.REGISTER, { method: 'POST', body: data }),
+
+  refresh: (refreshToken: string): Promise<TokenResponse> =>
+    apiRequest(API_PATHS.AUTH.REFRESH, { method: 'POST', body: { refreshToken } }),
+
+  logout: (refreshToken: string): Promise<void> =>
+    apiRequest(API_PATHS.AUTH.LOGOUT, { method: 'POST', body: { refreshToken } }),
+
+  getMe: (): Promise<UserProfile> =>
+    apiRequest(API_PATHS.AUTH.ME, { method: 'GET' }),
+
+  createInquiry: (): Promise<InquiryResponse> =>
+    apiRequest(API_PATHS.INQUIRIES.CREATE, { method: 'POST' }),
+
+  getInquiry: (inquiryId: string): Promise<InquiryResponse> =>
+    apiRequest(API_PATHS.INQUIRIES.GET(inquiryId), { method: 'GET' }),
+
+  submitGovernmentId: (inquiryId: string, fields: GovernmentIdFields, image: File): Promise<VerificationSummary> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    formData.append('nric', fields.nric);
+    formData.append('dob', fields.dob);
+    formData.append('nationality', fields.nationality);
+    return apiRequest(API_PATHS.INQUIRIES.GOVERNMENT_ID(inquiryId), { method: 'POST', body: formData, isFormData: true });
   },
 
-  register: async (data: RegisterRequest): Promise<void> => {
-    const res = await fetch(`${BASE_URL}${API_PATHS.AUTH.REGISTER}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) throw new Error('Registration failed');
+  submitSelfie: (inquiryId: string, image: File): Promise<VerificationSummary> => {
+    const formData = new FormData();
+    formData.append('image', image);
+    return apiRequest(API_PATHS.INQUIRIES.SELFIE(inquiryId), { method: 'POST', body: formData, isFormData: true });
   },
-
-  getMe: async (token: string): Promise<UserProfile> => {
-    const res = await fetch(`${BASE_URL}${API_PATHS.AUTH.ME}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error('Failed to fetch user profile');
-    return res.json();
-  }
 };

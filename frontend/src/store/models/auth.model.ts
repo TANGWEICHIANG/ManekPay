@@ -23,3 +23,8 @@ export interface UserProfile {
   fullName: string;
   kycStatus: KycStatus;
 }
+
+export interface RegisterResponse {
+  customerId: string;
+  kycStatus: KycStatus;
+}
