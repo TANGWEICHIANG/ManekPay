@@ -4,9 +4,34 @@ server:
 spring:
   application:
     name: ledger-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/manekpay
+    username: manekpay
+    password: manekpay
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    table: flyway_schema_history_ledger
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8086}/.well-known/jwks.json
 
 management:
   endpoints:
     web:
       exposure:
         include: health
+
+app:
+  auth-service:
+    base-url: ${AUTH_SERVICE_URL:http://localhost:8086}
