@@ -18,7 +18,7 @@ spring:
       port: 6379
   flyway:
     enabled: true
-    baseline-on-migrate: true
+    baseline-on-migrate: false
     table: flyway_schema_history_ledger
   security:
     oauth2:
