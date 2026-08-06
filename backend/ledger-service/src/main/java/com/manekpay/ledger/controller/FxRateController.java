@@ -1,5 +1,6 @@
 package com.manekpay.ledger.controller;
 
+import com.manekpay.ledger.config.CurrentCustomer;
 import com.manekpay.ledger.dto.FxRateResponse;
 import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.service.FxRateProvider;
@@ -18,6 +19,6 @@ public class FxRateController {
 
     @GetMapping("/fx-rates/{from}/{to}")
     public FxRateResponse getRate(@PathVariable Currency from, @PathVariable Currency to) {
-        return new FxRateResponse(from, to, fxRateProvider.getRate(from, to));
+        return new FxRateResponse(from, to, fxRateProvider.getRate(from, to, CurrentCustomer.bearerToken()));
     }
 }

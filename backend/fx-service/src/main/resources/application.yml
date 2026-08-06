@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: fx-service
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AUTH_SERVICE_URL:http://localhost:8086}/.well-known/jwks.json
 
 management:
   endpoints:
