@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.time.Instant;
 
 @Service
 public class VelocityRuleService {
@@ -48,7 +49,13 @@ public class VelocityRuleService {
         String key = "risk:velocity:" + event.customerId();
         double score = event.occurredAt().toEpochMilli();
         redisTemplate.opsForZSet().add(key, event.transactionId().toString(), score);
-        redisTemplate.opsForZSet().removeRangeByScore(key, 0, score - WINDOW.toMillis());
+        // Prune relative to wall-clock now, not the just-added event's own score - anchoring to
+        // the event's score means a stale/replayed event (e.g. manually reprocessed off the
+        // transaction.created.DLT) can resurrect itself into the live window without ever being
+        // pruned, since its own prune call can't reach forward past its own timestamp.
+        long nowMillis = Instant.now().toEpochMilli();
+        redisTemplate.opsForZSet().removeRangeByScore(key, 0, nowMillis - WINDOW.toMillis());
+        redisTemplate.expire(key, WINDOW);
 
         Long count = redisTemplate.opsForZSet().zCard(key);
         if (count == null || count <= MAX_HIGH_VALUE_IN_WINDOW) {
