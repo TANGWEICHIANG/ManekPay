@@ -1,9 +1,11 @@
 package com.manekpay.ledger.controller;
 
 import com.manekpay.ledger.config.CurrentCustomer;
+import com.manekpay.ledger.dto.TransactionCreatedEvent;
 import com.manekpay.ledger.dto.TransferRequest;
 import com.manekpay.ledger.dto.TransferResponse;
 import com.manekpay.ledger.dto.TransfersResponse;
+import com.manekpay.ledger.service.TransactionEventPublisher;
 import com.manekpay.ledger.service.TransferService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,16 +25,22 @@ import java.util.UUID;
 public class TransferController {
 
     private final TransferService transferService;
+    private final TransactionEventPublisher eventPublisher;
 
-    public TransferController(TransferService transferService) {
+    public TransferController(TransferService transferService, TransactionEventPublisher eventPublisher) {
         this.transferService = transferService;
+        this.eventPublisher = eventPublisher;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TransferResponse create(@Valid @RequestBody TransferRequest request,
                                     @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
-        return transferService.transfer(CurrentCustomer.id(), CurrentCustomer.bearerToken(), request, idempotencyKey);
+        UUID customerId = CurrentCustomer.id();
+        TransferResponse response = transferService.transfer(customerId, CurrentCustomer.bearerToken(), request, idempotencyKey);
+        eventPublisher.publishTransactionCreated(new TransactionCreatedEvent(
+                response.transferId(), customerId, response.sourceAmount(), response.sourceCurrency(), response.createdAt()));
+        return response;
     }
 
     @GetMapping
