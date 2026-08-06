@@ -39,7 +39,8 @@ public class TransferController {
         UUID customerId = CurrentCustomer.id();
         TransferResponse response = transferService.transfer(customerId, CurrentCustomer.bearerToken(), request, idempotencyKey);
         eventPublisher.publishTransactionCreated(new TransactionCreatedEvent(
-                response.transferId(), customerId, response.sourceAmount(), response.sourceCurrency(), response.createdAt()));
+                response.transferId(), customerId, response.sourceAmount(), response.sourceCurrency(),
+                CurrentCustomer.homeCurrency(), response.createdAt()));
         return response;
     }
 
