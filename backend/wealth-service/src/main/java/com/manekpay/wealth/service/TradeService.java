@@ -28,13 +28,15 @@ public class TradeService {
         this.holdingRepository = holdingRepository;
     }
 
-    // Two concurrent buys of the SAME asset by the SAME customer (different idempotency keys,
-    // so genuinely two separate intended purchases) could both read "no holding yet" and race on
-    // the unique(customer_id, asset_id) constraint - the loser's DataIntegrityViolationException
+    // findByCustomerIdAndAssetIdForUpdate takes a row lock (SELECT ... FOR UPDATE, mirroring
+    // ledger-service's WalletRepository.findByIdForUpdate) so two concurrent repeat purchases of
+    // an asset the customer already holds can't both read the same shares total and silently
+    // overwrite each other's update - the second transaction blocks until the first commits,
+    // then reads the already-updated total. For a customer's FIRST purchase of an asset (no row
+    // to lock yet), two concurrent buys can still both attempt to INSERT and race on the
+    // unique(customer_id, asset_id) constraint - the loser's DataIntegrityViolationException
     // surfaces as a 409 via ApiExceptionHandler rather than being silently retried, same backstop
-    // pattern as ledger-service's own idempotency-key race handling. This is a narrow enough
-    // window (two orders for the identical ticker within milliseconds) that a "please retry"
-    // response is an acceptable simplification for this phase.
+    // pattern as ledger-service's own idempotency-key race handling.
     @Transactional
     public Trade buy(UUID customerId, String assetSymbol, BigDecimal amount, String idempotencyKey) {
         Asset asset = assetRepository.findBySymbol(assetSymbol).orElseThrow(AssetNotFoundException::new);
@@ -42,7 +44,7 @@ public class TradeService {
 
         Trade trade = tradeRepository.save(new Trade(customerId, asset.getId(), amount, shares, asset.getPricePerShare(), idempotencyKey));
 
-        Holding holding = holdingRepository.findByCustomerIdAndAssetId(customerId, asset.getId())
+        Holding holding = holdingRepository.findByCustomerIdAndAssetIdForUpdate(customerId, asset.getId())
                 .orElseGet(() -> new Holding(customerId, asset.getId()));
         holding.setShares(holding.getShares().add(shares));
         holdingRepository.save(holding);

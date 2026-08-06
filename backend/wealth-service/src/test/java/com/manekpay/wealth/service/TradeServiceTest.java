@@ -41,7 +41,7 @@ class TradeServiceTest {
         UUID customerId = UUID.randomUUID();
         Asset asset = newAsset("AAPL", "Apple Inc.", new BigDecimal("190.0000"), false);
         when(assetRepository.findBySymbol("AAPL")).thenReturn(Optional.of(asset));
-        when(holdingRepository.findByCustomerIdAndAssetId(customerId, asset.getId())).thenReturn(Optional.empty());
+        when(holdingRepository.findByCustomerIdAndAssetIdForUpdate(customerId, asset.getId())).thenReturn(Optional.empty());
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Trade trade = service.buy(customerId, "AAPL", new BigDecimal("100.0000"), "key-1");
@@ -64,7 +64,7 @@ class TradeServiceTest {
         UUID customerId = UUID.randomUUID();
         Asset asset = newAsset("AAPL", "Apple Inc.", new BigDecimal("190.0000"), false);
         when(assetRepository.findBySymbol("AAPL")).thenReturn(Optional.of(asset));
-        when(holdingRepository.findByCustomerIdAndAssetId(customerId, asset.getId())).thenReturn(Optional.empty());
+        when(holdingRepository.findByCustomerIdAndAssetIdForUpdate(customerId, asset.getId())).thenReturn(Optional.empty());
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.buy(customerId, "AAPL", new BigDecimal("190.0000"), "key-1");
@@ -83,12 +83,16 @@ class TradeServiceTest {
         Holding existing = new Holding(customerId, asset.getId());
         existing.setShares(new BigDecimal("2.0000"));
         when(assetRepository.findBySymbol("AAPL")).thenReturn(Optional.of(asset));
-        when(holdingRepository.findByCustomerIdAndAssetId(customerId, asset.getId())).thenReturn(Optional.of(existing));
+        when(holdingRepository.findByCustomerIdAndAssetIdForUpdate(customerId, asset.getId())).thenReturn(Optional.of(existing));
         when(tradeRepository.save(any(Trade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.buy(customerId, "AAPL", new BigDecimal("190.0000"), "key-1");
 
         assertThat(existing.getShares()).isEqualByComparingTo("3.0000");
+        // The row-locking read is what prevents two concurrent repeat purchases from both reading
+        // the same shares total and silently overwriting each other's update - pin the actual
+        // repository method being called, not just the observable outcome.
+        verify(holdingRepository).findByCustomerIdAndAssetIdForUpdate(customerId, asset.getId());
     }
 
     // Asset's constructor is package-private-by-omission (protected, JPA-only) with no public
