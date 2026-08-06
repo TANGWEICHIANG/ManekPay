@@ -28,4 +28,12 @@ export const API_PATHS = {
   VAULTS: {
     ME: '/vaults/me',
   },
+  RISK: {
+    FLAGS: '/risk/flags/me',
+  },
+  WEALTH: {
+    ASSETS: '/wealth/assets',
+    TRADES: '/wealth/trades',
+    HOLDINGS: '/wealth/holdings/me',
+  },
 } as const;
