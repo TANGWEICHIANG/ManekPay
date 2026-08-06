@@ -31,6 +31,14 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       CLUSTER_ID: ManekPayKRaftClusterId1
+      # Single-broker dev cluster: the internal __consumer_offsets topic defaults to
+      # replication factor 3, which can never succeed with only 1 broker available - every
+      # consumer group's FindCoordinator request hangs forever until this is set. Producers
+      # and manual-partition-assign reads don't need __consumer_offsets, so this was never
+      # caught until the first real @KafkaListener consumer group connected to this broker.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
   nginx:
     image: nginx:1.27-alpine
