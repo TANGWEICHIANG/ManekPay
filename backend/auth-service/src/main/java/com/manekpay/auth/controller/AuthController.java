@@ -10,6 +10,7 @@ import com.manekpay.auth.exception.InvalidTokenException;
 import com.manekpay.auth.dto.TokenResponse;
 import com.manekpay.auth.dto.RefreshRequest;
 import com.manekpay.auth.service.JwtService;
+import com.manekpay.auth.service.HomeCurrencyResolver;
 
 import com.manekpay.auth.entity.Customer;
 import com.manekpay.auth.repository.CustomerRepository;
@@ -28,13 +29,16 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final HomeCurrencyResolver homeCurrencyResolver;
 
     public AuthController(CustomerRepository customerRepository, PasswordEncoder passwordEncoder,
-                           JwtService jwtService, RefreshTokenService refreshTokenService) {
+                           JwtService jwtService, RefreshTokenService refreshTokenService,
+                           HomeCurrencyResolver homeCurrencyResolver) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.homeCurrencyResolver = homeCurrencyResolver;
     }
 
     @PostMapping("/register")
@@ -55,7 +59,8 @@ public class AuthController {
         if (!passwordEncoder.matches(request.password(), customer.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
-        String accessToken = jwtService.issueAccessToken(customer.getId(), customer.getEmail(), customer.getKycStatus());
+        String homeCurrency = homeCurrencyResolver.resolve(customer.getId());
+        String accessToken = jwtService.issueAccessToken(customer.getId(), customer.getEmail(), customer.getKycStatus(), homeCurrency);
         String refreshToken = refreshTokenService.issue(customer.getId());
         return new TokenResponse(accessToken, refreshToken, JwtService.ACCESS_TOKEN_TTL.toSeconds());
     }
@@ -66,7 +71,8 @@ public class AuthController {
                 .orElseThrow(InvalidTokenException::new);
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(InvalidTokenException::new);
-        String accessToken = jwtService.issueAccessToken(customer.getId(), customer.getEmail(), customer.getKycStatus());
+        String homeCurrency = homeCurrencyResolver.resolve(customer.getId());
+        String accessToken = jwtService.issueAccessToken(customer.getId(), customer.getEmail(), customer.getKycStatus(), homeCurrency);
         String newRefreshToken = refreshTokenService.issue(customer.getId());
         return new TokenResponse(accessToken, newRefreshToken, JwtService.ACCESS_TOKEN_TTL.toSeconds());
     }
