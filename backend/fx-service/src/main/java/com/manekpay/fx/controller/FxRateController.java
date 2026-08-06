@@ -17,7 +17,7 @@ public class FxRateController {
         this.fxRateService = fxRateService;
     }
 
-    @GetMapping("/fx/rates/{from}/{to}")
+    @GetMapping("/rates/{from}/{to}")
     public FxRateResponse getRate(@PathVariable Currency from, @PathVariable Currency to) {
         return new FxRateResponse(from, to, fxRateService.getRate(from, to));
     }

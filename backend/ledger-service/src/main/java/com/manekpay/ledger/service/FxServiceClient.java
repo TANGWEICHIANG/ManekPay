@@ -27,7 +27,7 @@ public class FxServiceClient implements FxRateProvider {
         }
         try {
             FxRateResponse response = restClient.get()
-                    .uri("/fx/rates/{from}/{to}", from, to)
+                    .uri("/rates/{from}/{to}", from, to)
                     .header("Authorization", "Bearer " + bearerToken)
                     .retrieve()
                     .body(FxRateResponse.class);
