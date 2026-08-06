@@ -102,6 +102,24 @@ class VaultServiceTest {
     }
 
     @Test
+    void skipsWithoutTouchingBalanceWhenVaultCurrencyNoLongerMatchesHomeCurrency() {
+        VaultService service = new VaultService(vaultRepository, roundUpRepository);
+        UUID customerId = UUID.randomUUID();
+        Vault vault = new Vault(customerId, Currency.MYR);
+        vault.setBalance(new BigDecimal("5.0000"));
+        when(vaultRepository.findByCustomerId(customerId)).thenReturn(Optional.of(vault));
+
+        TransactionCreatedEvent event = new TransactionCreatedEvent(
+                UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.SGD, Currency.SGD, Instant.now());
+
+        service.applyRoundUp(event);
+
+        assertThat(vault.getBalance()).isEqualByComparingTo("5.0000");
+        verify(roundUpRepository, never()).save(any());
+        verify(vaultRepository, never()).save(vault);
+    }
+
+    @Test
     void skipsWithoutTouchingBalanceWhenRoundUpAlreadyRecorded() {
         VaultService service = new VaultService(vaultRepository, roundUpRepository);
         UUID customerId = UUID.randomUUID();
