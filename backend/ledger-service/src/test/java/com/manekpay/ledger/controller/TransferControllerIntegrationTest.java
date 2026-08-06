@@ -1,10 +1,13 @@
 package com.manekpay.ledger.controller;
 
+import com.manekpay.ledger.dto.TransactionCreatedEvent;
 import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.repository.WalletRepository;
 import com.manekpay.ledger.service.AccountService;
 import com.manekpay.ledger.service.AuthServiceClient;
+import com.manekpay.ledger.service.TransactionEventPublisher;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +23,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -59,6 +65,8 @@ class TransferControllerIntegrationTest {
     private WalletRepository walletRepository;
     @MockBean
     private AuthServiceClient authServiceClient;
+    @MockBean
+    private TransactionEventPublisher eventPublisher;
 
     @Test
     void repeatingTheSameIdempotencyKeyReplaysTheCachedResponseInsteadOfTransferringTwice() throws Exception {
@@ -90,7 +98,17 @@ class TransferControllerIntegrationTest {
 
         // Only one 30.0000 debit should have actually happened, despite two identical requests.
         var reloaded = walletRepository.findByAccountIdAndCurrency(senderAccount.getId(), Currency.MYR).orElseThrow();
-        org.assertj.core.api.Assertions.assertThat(reloaded.getBalance()).isEqualByComparingTo("70.0000");
+        assertThat(reloaded.getBalance()).isEqualByComparingTo("70.0000");
+
+        // The idempotency filter short-circuits the replay before it reaches the controller, so
+        // the transaction.created event must only have been published once, not twice, and with
+        // the correct payload for the transfer that actually happened.
+        ArgumentCaptor<TransactionCreatedEvent> eventCaptor = ArgumentCaptor.forClass(TransactionCreatedEvent.class);
+        verify(eventPublisher, times(1)).publishTransactionCreated(eventCaptor.capture());
+        TransactionCreatedEvent publishedEvent = eventCaptor.getValue();
+        assertThat(publishedEvent.customerId()).isEqualTo(sender);
+        assertThat(publishedEvent.amount()).isEqualByComparingTo("30.0000");
+        assertThat(publishedEvent.currency()).isEqualTo(Currency.MYR);
     }
 
     @Test
@@ -118,5 +136,7 @@ class TransferControllerIntegrationTest {
         mockMvc.perform(get("/transfers").with(jwt().jwt(j -> j.subject(senderSubject))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transfers", org.hamcrest.Matchers.hasSize(1)));
+
+        verify(eventPublisher, times(1)).publishTransactionCreated(any());
     }
 }
