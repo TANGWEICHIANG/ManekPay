@@ -11,6 +11,15 @@ interface RequestOptions {
   headers?: Record<string, string>;
 }
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 async function rawRequest(path: string, options: RequestOptions, accessToken: string | null): Promise<Response> {
   const headers: Record<string, string> = { ...options.headers };
   if (accessToken) {
@@ -84,7 +93,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     } catch {
       // response body wasn't JSON - keep the generic message
     }
-    throw new Error(message);
+    throw new ApiError(res.status, message);
   }
 
   if (res.status === 204) {

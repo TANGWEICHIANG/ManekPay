@@ -20,4 +20,12 @@ export const API_PATHS = {
     TRANSFERS: '/ledger/transfers',
     TRANSFER: (id: string) => `/ledger/transfers/${id}`,
   },
+  FX: {
+    RATE: (from: string, to: string) => `/fx/rates/${from}/${to}`,
+    LOCKS: '/fx/locks',
+    LOCK: (id: string) => `/fx/locks/${id}`,
+  },
+  VAULTS: {
+    ME: '/vaults/me',
+  },
 } as const;
