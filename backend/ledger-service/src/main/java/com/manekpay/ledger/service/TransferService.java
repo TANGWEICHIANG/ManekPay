@@ -77,7 +77,7 @@ public class TransferService {
                 .orElseThrow(() -> new IllegalStateException("Missing recipient wallet for " + request.destCurrency()));
 
         boolean crossCurrency = request.sourceCurrency() != request.destCurrency();
-        BigDecimal fxRate = crossCurrency ? fxRateProvider.getRate(request.sourceCurrency(), request.destCurrency()) : null;
+        BigDecimal fxRate = crossCurrency ? fxRateProvider.getRate(request.sourceCurrency(), request.destCurrency(), bearerToken) : null;
         BigDecimal destAmount = crossCurrency
                 ? request.amount().multiply(fxRate).setScale(4, RoundingMode.HALF_EVEN)
                 : request.amount();

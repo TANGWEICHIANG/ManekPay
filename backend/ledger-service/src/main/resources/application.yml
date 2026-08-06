@@ -41,3 +41,5 @@ management:
 app:
   auth-service:
     base-url: ${AUTH_SERVICE_URL:http://localhost:8086}
+  fx-service:
+    base-url: ${FX_SERVICE_URL:http://localhost:8082}
