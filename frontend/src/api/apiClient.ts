@@ -8,10 +8,11 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: unknown;
   isFormData?: boolean;
+  headers?: Record<string, string>;
 }
 
 async function rawRequest(path: string, options: RequestOptions, accessToken: string | null): Promise<Response> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...options.headers };
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
