@@ -9,8 +9,8 @@ export function WealthPage() {
   const symbolSelectId = useId();
 
   const [shariahOnly, setShariahOnly] = useState(false);
-  const { data: assetsData, isLoading: assetsLoading } = useAssets(shariahOnly ? true : undefined);
-  const { data: holdingsData } = useHoldings();
+  const { data: assetsData, isLoading: assetsLoading, isError: assetsError } = useAssets(shariahOnly ? true : undefined);
+  const { data: holdingsData, isLoading: holdingsLoading, isError: holdingsError } = useHoldings();
   const createTrade = useCreateTrade();
 
   const [assetSymbol, setAssetSymbol] = useState('');
@@ -47,7 +47,11 @@ export function WealthPage() {
             Shariah-compliant only
           </label>
         </div>
-        {assetsLoading ? (
+        {assetsError ? (
+          <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+            Could not load assets. Please try again shortly.
+          </p>
+        ) : assetsLoading ? (
           <p className="text-foreground/70">Loading…</p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -108,20 +112,28 @@ export function WealthPage() {
 
       <div>
         <h2 className="mb-3 text-lg font-medium text-foreground">Holdings</h2>
-        {holdingsData && holdingsData.holdings.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {holdingsData.holdings.map((h) => (
-              <Card key={h.assetSymbol} className="flex items-center justify-between">
-                <span className="text-foreground">
-                  {h.assetSymbol} — {h.assetName}
-                </span>
-                <span className="text-foreground">{h.shares.toFixed(4)} shares</span>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <p className="text-foreground/70">No holdings yet.</p>
-        )}
+        <div aria-live="polite">
+          {holdingsError ? (
+            <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              Could not load your holdings. Please try again shortly.
+            </p>
+          ) : holdingsLoading ? (
+            <p className="text-foreground/70">Loading…</p>
+          ) : holdingsData && holdingsData.holdings.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {holdingsData.holdings.map((h) => (
+                <Card key={h.assetSymbol} className="flex items-center justify-between">
+                  <span className="text-foreground">
+                    {h.assetSymbol} — {h.assetName}
+                  </span>
+                  <span className="text-foreground">{h.shares.toFixed(4)} shares</span>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <p className="text-foreground/70">No holdings yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );
