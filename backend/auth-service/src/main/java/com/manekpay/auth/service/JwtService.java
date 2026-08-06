@@ -32,13 +32,14 @@ public class JwtService {
     // completing). Never use this claim to gate an authorization decision; always re-check
     // the customer's live kycStatus in the database for anything that matters (e.g. before
     // allowing a financial transaction in a later phase).
-    public String issueAccessToken(UUID customerId, String email, KycStatus kycStatus) {
+    public String issueAccessToken(UUID customerId, String email, KycStatus kycStatus, String homeCurrency) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + ACCESS_TOKEN_TTL.toMillis());
         return Jwts.builder()
                 .setSubject(customerId.toString())
                 .claim("email", email)
                 .claim("kycStatus", kycStatus.name())
+                .claim("homeCurrency", homeCurrency)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(privateKey, SignatureAlgorithm.RS256)

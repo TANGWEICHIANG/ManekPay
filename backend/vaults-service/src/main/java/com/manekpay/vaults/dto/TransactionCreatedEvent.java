@@ -1,6 +1,6 @@
-package com.manekpay.ledger.dto;
+package com.manekpay.vaults.dto;
 
-import com.manekpay.ledger.entity.Currency;
+import com.manekpay.vaults.entity.Currency;
 
 import java.math.BigDecimal;
 import java.time.Instant;

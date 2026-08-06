@@ -84,13 +84,13 @@ class TransferControllerIntegrationTest {
                 {"recipient":{"type":"ACCOUNT_NUMBER","value":"%s"},"sourceCurrency":"MYR","destCurrency":"MYR","amount":"30.0000"}
                 """.formatted(recipientAccountNumber);
 
-        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject)))
+        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject).claim("homeCurrency", "MYR")))
                         .header("X-Idempotency-Key", "same-key-123")
                         .contentType("application/json")
                         .content(requestBody))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject)))
+        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject).claim("homeCurrency", "MYR")))
                         .header("X-Idempotency-Key", "same-key-123")
                         .contentType("application/json")
                         .content(requestBody))
@@ -109,6 +109,7 @@ class TransferControllerIntegrationTest {
         assertThat(publishedEvent.customerId()).isEqualTo(sender);
         assertThat(publishedEvent.amount()).isEqualByComparingTo("30.0000");
         assertThat(publishedEvent.currency()).isEqualTo(Currency.MYR);
+        assertThat(publishedEvent.homeCurrency()).isEqualTo(Currency.MYR);
     }
 
     @Test

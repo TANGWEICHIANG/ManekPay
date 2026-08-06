@@ -30,13 +30,14 @@ class JwtServiceTest {
         JwtService service = newServiceWithFreshKeyPair();
         UUID customerId = UUID.randomUUID();
 
-        String token = service.issueAccessToken(customerId, "carol@example.com", KycStatus.APPROVED);
+        String token = service.issueAccessToken(customerId, "carol@example.com", KycStatus.APPROVED, "MYR");
         Optional<Claims> claims = service.validate(token);
 
         assertThat(claims).isPresent();
         assertThat(claims.get().getSubject()).isEqualTo(customerId.toString());
         assertThat(claims.get().get("email")).isEqualTo("carol@example.com");
         assertThat(claims.get().get("kycStatus")).isEqualTo("APPROVED");
+        assertThat(claims.get().get("homeCurrency")).isEqualTo("MYR");
     }
 
     @Test
@@ -44,7 +45,7 @@ class JwtServiceTest {
         JwtService signer = newServiceWithFreshKeyPair();
         JwtService verifier = newServiceWithFreshKeyPair();
 
-        String token = signer.issueAccessToken(UUID.randomUUID(), "dave@example.com", KycStatus.PENDING);
+        String token = signer.issueAccessToken(UUID.randomUUID(), "dave@example.com", KycStatus.PENDING, "MYR");
         Optional<Claims> claims = verifier.validate(token);
 
         assertThat(claims).isEmpty();
