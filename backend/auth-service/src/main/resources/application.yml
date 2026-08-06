@@ -18,7 +18,8 @@ spring:
       port: 6379
   flyway:
     enabled: true
-    baseline-on-migrate: false
+    baseline-on-migrate: true
+    baseline-version: 0
     table: flyway_schema_history_auth
   servlet:
     multipart:
