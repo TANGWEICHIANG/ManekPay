@@ -63,7 +63,7 @@ class VaultControllerIntegrationTest {
 
         String responseBody = null;
         for (int attempt = 0; attempt < 20; attempt++) {
-            var result = mockMvc.perform(get("/vaults/me").with(jwt().jwt(j -> j.subject(customerSubject)))).andReturn();
+            var result = mockMvc.perform(get("/me").with(jwt().jwt(j -> j.subject(customerSubject)))).andReturn();
             if (result.getResponse().getStatus() == 200) {
                 responseBody = result.getResponse().getContentAsString();
                 break;
@@ -72,7 +72,7 @@ class VaultControllerIntegrationTest {
         }
 
         assertThat(responseBody).isNotNull();
-        mockMvc.perform(get("/vaults/me").with(jwt().jwt(j -> j.subject(customerSubject))))
+        mockMvc.perform(get("/me").with(jwt().jwt(j -> j.subject(customerSubject))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.currency").value("MYR"))
                 .andExpect(jsonPath("$.balance").value(0.7));
