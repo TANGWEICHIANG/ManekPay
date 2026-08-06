@@ -69,4 +69,16 @@ class FxLockServiceTest {
 
         assertThatThrownBy(() -> service.getLock("gone")).isInstanceOf(LockNotFoundException.class);
     }
+
+    @Test
+    void getLockThrowsWhenKeyExpiredBetweenGetAndGetExpire() {
+        ValueOperations<String, String> valueOps = mock(ValueOperations.class);
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.get("fx:lock:racy")).thenReturn("MYR|SGD|0.3050");
+        when(redisTemplate.getExpire("fx:lock:racy")).thenReturn(-2L);
+
+        FxLockService service = new FxLockService(redisTemplate, fxRateService);
+
+        assertThatThrownBy(() -> service.getLock("racy")).isInstanceOf(LockNotFoundException.class);
+    }
 }

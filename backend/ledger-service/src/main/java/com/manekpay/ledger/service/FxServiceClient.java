@@ -2,7 +2,7 @@ package com.manekpay.ledger.service;
 
 import com.manekpay.ledger.dto.FxRateResponse;
 import com.manekpay.ledger.entity.Currency;
-import com.manekpay.ledger.exception.AuthServiceUnavailableException;
+import com.manekpay.ledger.exception.FxServiceUnavailableException;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -33,7 +33,7 @@ public class FxServiceClient implements FxRateProvider {
                     .body(FxRateResponse.class);
             return response != null ? response.rate() : null;
         } catch (RestClientException e) {
-            throw new AuthServiceUnavailableException(e);
+            throw new FxServiceUnavailableException(e);
         }
     }
 }

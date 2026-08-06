@@ -41,11 +41,17 @@ public class FxLockService {
             throw new LockNotFoundException();
         }
         Long ttlSeconds = redisTemplate.getExpire(REDIS_KEY_PREFIX + lockId);
+        // getExpire returns -2 if the key expired between the get() above and this call, and
+        // -1 if it exists with no TTL (shouldn't happen here, but treat it the same way) -
+        // either means the lock can no longer be trusted, so it must not be reported as found.
+        if (ttlSeconds == null || ttlSeconds < 0) {
+            throw new LockNotFoundException();
+        }
         String[] parts = value.split("\\|");
         Currency from = Currency.valueOf(parts[0]);
         Currency to = Currency.valueOf(parts[1]);
         BigDecimal rate = new BigDecimal(parts[2]);
-        Instant expiresAt = Instant.now().plusSeconds(ttlSeconds != null ? ttlSeconds : 0);
+        Instant expiresAt = Instant.now().plusSeconds(ttlSeconds);
         return new FxLock(lockId, from, to, rate, expiresAt);
     }
 

@@ -3,6 +3,7 @@ package com.manekpay.ledger.config;
 import com.manekpay.ledger.dto.ErrorResponse;
 import com.manekpay.ledger.exception.AuthServiceUnavailableException;
 import com.manekpay.ledger.exception.DuplicateProxyException;
+import com.manekpay.ledger.exception.FxServiceUnavailableException;
 import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.ProxyNotFoundException;
@@ -69,6 +70,12 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthServiceUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleAuthServiceUnavailable(AuthServiceUnavailableException ex, HttpServletRequest request) {
         log.error("auth-service unreachable on {} {}", request.getMethod(), request.getRequestURI(), ex.getCause());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(FxServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleFxServiceUnavailable(FxServiceUnavailableException ex, HttpServletRequest request) {
+        log.error("fx-service unreachable on {} {}", request.getMethod(), request.getRequestURI(), ex.getCause());
         return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 
