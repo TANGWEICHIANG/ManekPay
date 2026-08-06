@@ -9,7 +9,4 @@ export const fxApi = {
 
   createLock: (from: Currency, to: Currency): Promise<FxLockResponse> =>
     apiRequest(API_PATHS.FX.LOCKS, { method: 'POST', body: { from, to } }),
-
-  getLock: (lockId: string): Promise<FxLockResponse> =>
-    apiRequest(API_PATHS.FX.LOCK(lockId), { method: 'GET' }),
 };
