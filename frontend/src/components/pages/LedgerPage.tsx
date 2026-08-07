@@ -1,7 +1,10 @@
 import { type FormEvent, useState } from 'react';
+import { Wallet } from 'lucide-react';
 import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { Select } from '../atoms/Select';
+import { PageHeader } from '../atoms/PageHeader';
 import { useMyAccount, useFxRate, useCreateTransfer, useTransfers } from '../../hooks/useLedger';
 import { Currency } from '../../constants/enums';
 import type { RecipientType } from '../../store/models/ledger.model';
@@ -56,15 +59,15 @@ export function LedgerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold text-foreground">Ledger</h1>
+      <PageHeader icon={Wallet} iconClasses="bg-ledger/10 text-ledger" title="Ledger" />
 
       <div>
         <h2 className="mb-3 text-lg font-medium text-foreground">Balances</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {account.wallets.map((wallet) => (
             <Card key={wallet.currency} className="flex flex-col gap-1">
-              <span className="text-sm text-foreground/70">{wallet.currency}</span>
-              <span className="text-xl font-semibold text-foreground">{wallet.balance.toFixed(2)}</span>
+              <span className="text-sm text-muted">{wallet.currency}</span>
+              <span className="text-xl font-semibold tabular-nums text-foreground">{wallet.balance.toFixed(2)}</span>
             </Card>
           ))}
         </div>
@@ -74,24 +77,21 @@ export function LedgerPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <h2 className="text-lg font-medium text-foreground">Send Money</h2>
           {createTransfer.isError && (
-            <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+            <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
               {createTransfer.error instanceof Error ? createTransfer.error.message : 'Transfer failed'}
             </p>
           )}
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-foreground">Recipient type</label>
-            <select
-              value={recipientType}
-              onChange={(e) => setRecipientType(e.target.value as RecipientType)}
-              className="rounded border border-border bg-background px-3 py-2 text-foreground"
-            >
-              {RECIPIENT_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Recipient type"
+            value={recipientType}
+            onChange={(e) => setRecipientType(e.target.value as RecipientType)}
+          >
+            {RECIPIENT_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </Select>
           <Input
             label="Recipient"
             required
@@ -99,34 +99,28 @@ export function LedgerPage() {
             onChange={(e) => setRecipientValue(e.target.value)}
           />
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-foreground">Send from</label>
-              <select
-                value={sourceCurrency}
-                onChange={(e) => setSourceCurrency(e.target.value as Currency)}
-                className="rounded border border-border bg-background px-3 py-2 text-foreground"
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-foreground">Recipient receives</label>
-              <select
-                value={destCurrency}
-                onChange={(e) => setDestCurrency(e.target.value as Currency)}
-                className="rounded border border-border bg-background px-3 py-2 text-foreground"
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label="Send from"
+              value={sourceCurrency}
+              onChange={(e) => setSourceCurrency(e.target.value as Currency)}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
+            <Select
+              label="Recipient receives"
+              value={destCurrency}
+              onChange={(e) => setDestCurrency(e.target.value as Currency)}
+            >
+              {CURRENCIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </Select>
           </div>
           <Input
             label="Amount"
@@ -138,8 +132,8 @@ export function LedgerPage() {
             onChange={(e) => setAmount(e.target.value)}
           />
           {fxRate && destCurrency !== sourceCurrency && amount && (
-            <p className="text-sm text-foreground/70">
-              Recipient gets ≈ {(Number(amount) * fxRate.rate).toFixed(2)} {destCurrency}
+            <p className="text-sm text-muted">
+              Recipient gets ≈ <span className="tabular-nums">{(Number(amount) * fxRate.rate).toFixed(2)}</span> {destCurrency}
             </p>
           )}
           <Button type="submit" isLoading={createTransfer.isPending}>
@@ -154,15 +148,15 @@ export function LedgerPage() {
           <div className="flex flex-col gap-2">
             {transfersData.transfers.map((t) => (
               <Card key={t.transferId} className="flex items-center justify-between">
-                <span className="text-foreground">
+                <span className="tabular-nums text-foreground">
                   {t.sourceAmount} {t.sourceCurrency} → {t.destAmount} {t.destCurrency}
                 </span>
-                <span className="text-sm text-foreground/70">{new Date(t.createdAt).toLocaleString()}</span>
+                <span className="text-sm text-muted">{new Date(t.createdAt).toLocaleString()}</span>
               </Card>
             ))}
           </div>
         ) : (
-          <p className="text-foreground/70">No transactions yet.</p>
+          <p className="text-muted">No transactions yet.</p>
         )}
       </div>
     </div>

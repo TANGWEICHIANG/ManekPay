@@ -11,9 +11,17 @@ const STATUS_CLASSES: Record<KycStatus, string> = {
   REJECTED: 'bg-danger/10 text-danger',
 };
 
+const DOT_CLASSES: Record<KycStatus, string> = {
+  PENDING: 'bg-warning',
+  IN_REVIEW: 'bg-warning',
+  APPROVED: 'bg-success',
+  REJECTED: 'bg-danger',
+};
+
 export function Badge({ status }: BadgeProps) {
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_CLASSES[status]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${STATUS_CLASSES[status]}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT_CLASSES[status]}`} aria-hidden="true" />
       {status.replace('_', ' ')}
     </span>
   );

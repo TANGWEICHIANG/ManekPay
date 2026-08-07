@@ -1,11 +1,13 @@
 import { type FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { ShieldCheck } from 'lucide-react';
 import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { FileInput } from '../atoms/FileInput';
 import { Badge } from '../atoms/Badge';
+import { PageHeader } from '../atoms/PageHeader';
 import { useCreateInquiry, useSubmitGovernmentId, useSubmitSelfie } from '../../hooks/useKyc';
 import { VerificationStatus } from '../../constants/enums';
 import { ROUTES } from '../../constants/routes';
@@ -73,7 +75,7 @@ export function KycPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold text-foreground">Identity Verification</h1>
+      <PageHeader icon={ShieldCheck} iconClasses="bg-primary/10 text-primary" title="Identity Verification" />
 
       {step === 'start' && (
         <Card className="flex flex-col gap-4">
@@ -81,7 +83,7 @@ export function KycPage() {
             Verify your identity to unlock all ManekPay features. You'll need a government ID and a selfie.
           </p>
           {createInquiry.isError && (
-            <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+            <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
               {createInquiry.error instanceof Error ? createInquiry.error.message : 'Could not start verification'}
             </p>
           )}
@@ -96,12 +98,12 @@ export function KycPage() {
           <form onSubmit={handleGovernmentIdSubmit} className="flex flex-col gap-4">
             <h2 className="text-lg font-medium text-foreground">Step 1: Government ID</h2>
             {lastResult && lastResult.status === VerificationStatus.FAILED && (
-              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
                 Verification failed: {lastResult.resultDetail ?? 'please check your details and try again.'}
               </p>
             )}
             {submitGovernmentId.isError && (
-              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
                 {submitGovernmentId.error instanceof Error ? submitGovernmentId.error.message : 'Submission failed'}
               </p>
             )}
@@ -121,12 +123,12 @@ export function KycPage() {
           <form onSubmit={handleSelfieSubmit} className="flex flex-col gap-4">
             <h2 className="text-lg font-medium text-foreground">Step 2: Selfie</h2>
             {lastResult && lastResult.status === VerificationStatus.FAILED && (
-              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
                 Verification failed: {lastResult.resultDetail ?? 'please try again.'}
               </p>
             )}
             {submitSelfie.isError && (
-              <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
                 {submitSelfie.error instanceof Error ? submitSelfie.error.message : 'Submission failed'}
               </p>
             )}

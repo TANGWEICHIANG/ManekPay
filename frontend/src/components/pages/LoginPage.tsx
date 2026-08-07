@@ -26,12 +26,12 @@ export function LoginPage() {
     <AuthLayout title="Log in to ManekPay">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {justRegistered && !login.isError && (
-          <p role="status" className="rounded bg-success/10 px-3 py-2 text-sm text-success">
+          <p role="status" className="rounded-md bg-success/10 px-3 py-2 text-sm text-success">
             Account created — log in to continue.
           </p>
         )}
         {login.isError && (
-          <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
             {login.error instanceof Error ? login.error.message : 'Login failed'}
           </p>
         )}
