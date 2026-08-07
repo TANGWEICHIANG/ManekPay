@@ -17,7 +17,7 @@ export function FileInput({ label, onChange, required }: FileInputProps) {
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-foreground">
         {label}
       </label>
@@ -27,9 +27,9 @@ export function FileInput({ label, onChange, required }: FileInputProps) {
         accept="image/*"
         required={required}
         onChange={handleChange}
-        className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground file:mr-3 file:rounded file:border-0 file:bg-primary file:px-3 file:py-1 file:text-white"
+        className="rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground transition-colors duration-fast hover:border-muted file:mr-3 file:rounded-sm file:border-0 file:bg-primary file:px-3 file:py-1 file:font-semibold file:text-background"
       />
-      {fileName && <span className="text-sm text-foreground">{fileName}</span>}
+      {fileName && <span className="text-sm text-muted">{fileName}</span>}
     </div>
   );
 }

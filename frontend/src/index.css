@@ -3,23 +3,69 @@
 @tailwind utilities;
 
 :root {
-  --color-background: 255 255 255;
-  --color-foreground: 10 10 10;
-  --color-border: 229 229 229;
-  --color-primary: 79 70 229;
-  --color-success: 22 163 74;
+  --color-background: 247 248 252;
+  --color-surface: 255 255 255;
+  --color-surface-hover: 238 240 247;
+  --color-foreground: 18 23 43;
+  --color-muted: 91 97 120;
+  --color-border: 226 229 239;
+  --color-primary: 8 145 178;
+  --color-success: 5 150 105;
   --color-warning: 217 119 6;
-  --color-danger: 220 38 38;
+  --color-danger: 225 29 72;
+  --color-ledger: 37 99 235;
+  --color-fx: 5 150 105;
+  --color-vaults: 217 119 6;
+  --color-risk: 225 29 72;
+  --color-wealth: 124 58 237;
+  /* Fixed brand-navy panel, deliberately not flipped by color scheme - used for the
+     auth split-panel and other one-off brand moments that should always read as "ManekPay navy". */
+  --color-brand-start: 11 15 26;
+  --color-brand-end: 19 26 44;
+  --color-brand-foreground: 231 234 243;
+  --color-brand-muted: 139 147 172;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: 10 10 10;
-    --color-foreground: 245 245 245;
-    --color-border: 39 39 42;
-    --color-primary: 129 140 248;
-    --color-success: 74 222 128;
+    --color-background: 11 15 26;
+    --color-surface: 19 26 44;
+    --color-surface-hover: 27 36 64;
+    --color-foreground: 231 234 243;
+    --color-muted: 139 147 172;
+    --color-border: 35 44 71;
+    --color-primary: 34 211 238;
+    --color-success: 52 211 153;
     --color-warning: 251 191 36;
-    --color-danger: 248 113 113;
+    --color-danger: 251 113 133;
+    --color-ledger: 96 165 250;
+    --color-fx: 52 211 153;
+    --color-vaults: 251 191 36;
+    --color-risk: 251 113 133;
+    --color-wealth: 167 139 250;
+  }
+}
+
+* {
+  scrollbar-color: rgb(var(--color-border)) transparent;
+}
+
+body {
+  @apply bg-background text-foreground font-sans antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

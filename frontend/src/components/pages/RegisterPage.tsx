@@ -25,7 +25,7 @@ export function RegisterPage() {
     <AuthLayout title="Create your ManekPay account">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {register.isError && (
-          <p role="alert" className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+          <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
             {register.error instanceof Error ? register.error.message : 'Registration failed'}
           </p>
         )}
