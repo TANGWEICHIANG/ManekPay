@@ -44,7 +44,7 @@ class VaultServiceTest {
         when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.of(vault));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now());
+                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 
@@ -66,7 +66,7 @@ class VaultServiceTest {
         when(vaultRepository.save(any(Vault.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("1.2500"), Currency.SGD, Currency.SGD, Instant.now());
+                transactionId, customerId, new BigDecimal("1.2500"), Currency.SGD, Currency.SGD, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 
@@ -81,7 +81,7 @@ class VaultServiceTest {
     void skipsWhenTransferCurrencyDoesNotMatchHomeCurrency() {
         VaultService service = new VaultService(vaultRepository, roundUpRepository);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("12.3000"), Currency.USD, Currency.MYR, Instant.now());
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("12.3000"), Currency.USD, Currency.MYR, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 
@@ -93,7 +93,7 @@ class VaultServiceTest {
     void skipsWhenAmountIsAlreadyAWholeNumber() {
         VaultService service = new VaultService(vaultRepository, roundUpRepository);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.0000"), Currency.MYR, Currency.MYR, Instant.now());
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("10.0000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 
@@ -110,7 +110,7 @@ class VaultServiceTest {
         when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.of(vault));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.SGD, Currency.SGD, Instant.now());
+                UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.SGD, Currency.SGD, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 
@@ -131,7 +131,7 @@ class VaultServiceTest {
                 .thenThrow(new DataIntegrityViolationException("duplicate transaction_id"));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now());
+                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         service.applyRoundUp(event);
 

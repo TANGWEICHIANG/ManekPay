@@ -57,7 +57,7 @@ class VaultControllerIntegrationTest {
         String customerSubject = UUID.randomUUID().toString();
         UUID customerId = UUID.fromString(customerSubject);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now());
+                UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         kafkaTemplate.send(TransactionCreatedListener.TOPIC, customerId.toString(), event);
 
