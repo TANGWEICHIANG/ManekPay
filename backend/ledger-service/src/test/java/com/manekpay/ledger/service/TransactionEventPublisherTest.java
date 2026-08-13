@@ -47,7 +47,7 @@ class TransactionEventPublisherTest {
         UUID transactionId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("42.5000"), Currency.MYR, Currency.SGD, Instant.now());
+                transactionId, customerId, new BigDecimal("42.5000"), Currency.MYR, Currency.SGD, Instant.now(), null, null);
 
         Map<String, Object> consumerProps = new HashMap<>(KafkaTestUtils.consumerProps("test-group", "true", embeddedKafkaBroker));
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

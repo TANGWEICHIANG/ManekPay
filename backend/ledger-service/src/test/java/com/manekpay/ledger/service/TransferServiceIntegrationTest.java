@@ -74,7 +74,7 @@ class TransferServiceIntegrationTest {
 
         TransferResponse response = transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
-                        Currency.MYR, Currency.MYR, new BigDecimal("40.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("40.0000"), null),
                 "idem-" + UUID.randomUUID());
 
         assertThat(response.sourceAmount()).isEqualByComparingTo("40.0000");
@@ -95,7 +95,7 @@ class TransferServiceIntegrationTest {
 
         TransferResponse response = transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
-                        Currency.MYR, Currency.USD, new BigDecimal("100.0000")),
+                        Currency.MYR, Currency.USD, new BigDecimal("100.0000"), null),
                 "idem-" + UUID.randomUUID());
 
         assertThat(response.fxRate()).isNotNull();
@@ -115,7 +115,7 @@ class TransferServiceIntegrationTest {
 
         assertThatThrownBy(() -> transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
-                        Currency.MYR, Currency.MYR, new BigDecimal("50.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("50.0000"), null),
                 "idem-" + UUID.randomUUID()))
                 .isInstanceOf(InsufficientBalanceException.class);
         assertThat(walletFor(sender, Currency.MYR).getBalance()).isEqualByComparingTo("0.0000");
@@ -130,7 +130,7 @@ class TransferServiceIntegrationTest {
 
         assertThatThrownBy(() -> transferService.transfer(customer, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, accountNumber),
-                        Currency.MYR, Currency.MYR, new BigDecimal("10.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("10.0000"), null),
                 "idem-" + UUID.randomUUID()))
                 .isInstanceOf(SelfTransferException.class);
     }
@@ -145,7 +145,7 @@ class TransferServiceIntegrationTest {
 
         assertThatThrownBy(() -> transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
-                        Currency.MYR, Currency.MYR, new BigDecimal("10.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("10.0000"), null),
                 "idem-" + UUID.randomUUID()))
                 .isInstanceOf(KycNotApprovedException.class);
     }
@@ -164,11 +164,11 @@ class TransferServiceIntegrationTest {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         Future<?> f1 = executor.submit(() -> transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, accountNumberA),
-                        Currency.MYR, Currency.MYR, new BigDecimal("60.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("60.0000"), null),
                 "idem-" + UUID.randomUUID()));
         Future<?> f2 = executor.submit(() -> transferService.transfer(sender, "token",
                 new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, accountNumberB),
-                        Currency.MYR, Currency.MYR, new BigDecimal("60.0000")),
+                        Currency.MYR, Currency.MYR, new BigDecimal("60.0000"), null),
                 "idem-" + UUID.randomUUID()));
 
         int succeeded = 0;
