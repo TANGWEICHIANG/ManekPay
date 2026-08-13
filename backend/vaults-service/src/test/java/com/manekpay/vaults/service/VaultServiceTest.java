@@ -41,7 +41,7 @@ class VaultServiceTest {
         UUID transactionId = UUID.randomUUID();
         Vault vault = new Vault(customerId, Currency.MYR);
         vault.setBalance(new BigDecimal("5.0000"));
-        when(vaultRepository.findByCustomerId(customerId)).thenReturn(Optional.of(vault));
+        when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.of(vault));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
                 transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now());
@@ -62,7 +62,7 @@ class VaultServiceTest {
         VaultService service = new VaultService(vaultRepository, roundUpRepository);
         UUID customerId = UUID.randomUUID();
         UUID transactionId = UUID.randomUUID();
-        when(vaultRepository.findByCustomerId(customerId)).thenReturn(Optional.empty());
+        when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.empty());
         when(vaultRepository.save(any(Vault.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
@@ -85,7 +85,7 @@ class VaultServiceTest {
 
         service.applyRoundUp(event);
 
-        verify(vaultRepository, never()).findByCustomerId(any());
+        verify(vaultRepository, never()).findByCustomerIdAndNameIsNull(any());
         verify(roundUpRepository, never()).save(any());
     }
 
@@ -97,7 +97,7 @@ class VaultServiceTest {
 
         service.applyRoundUp(event);
 
-        verify(vaultRepository, never()).findByCustomerId(any());
+        verify(vaultRepository, never()).findByCustomerIdAndNameIsNull(any());
         verify(roundUpRepository, never()).save(any());
     }
 
@@ -107,7 +107,7 @@ class VaultServiceTest {
         UUID customerId = UUID.randomUUID();
         Vault vault = new Vault(customerId, Currency.MYR);
         vault.setBalance(new BigDecimal("5.0000"));
-        when(vaultRepository.findByCustomerId(customerId)).thenReturn(Optional.of(vault));
+        when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.of(vault));
 
         TransactionCreatedEvent event = new TransactionCreatedEvent(
                 UUID.randomUUID(), customerId, new BigDecimal("12.3000"), Currency.SGD, Currency.SGD, Instant.now());
@@ -126,7 +126,7 @@ class VaultServiceTest {
         UUID transactionId = UUID.randomUUID();
         Vault vault = new Vault(customerId, Currency.MYR);
         vault.setBalance(new BigDecimal("5.0000"));
-        when(vaultRepository.findByCustomerId(customerId)).thenReturn(Optional.of(vault));
+        when(vaultRepository.findByCustomerIdAndNameIsNull(customerId)).thenReturn(Optional.of(vault));
         when(roundUpRepository.save(any(RoundUp.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate transaction_id"));
 

@@ -24,7 +24,7 @@ public class VaultController {
     @GetMapping("/me")
     public VaultResponse me(@AuthenticationPrincipal Jwt jwt) {
         UUID customerId = UUID.fromString(jwt.getSubject());
-        Vault vault = vaultRepository.findByCustomerId(customerId).orElseThrow(VaultNotFoundException::new);
+        Vault vault = vaultRepository.findByCustomerIdAndNameIsNull(customerId).orElseThrow(VaultNotFoundException::new);
         return new VaultResponse(vault.getId(), vault.getCurrency(), vault.getBalance());
     }
 }
