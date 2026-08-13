@@ -8,5 +8,6 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record TransferRequest(@Valid @NotNull RecipientDto recipient, @NotNull Currency sourceCurrency,
-                               @NotNull Currency destCurrency, @NotNull @DecimalMin("0.01") BigDecimal amount) {
+                               @NotNull Currency destCurrency, @NotNull @DecimalMin("0.01") BigDecimal amount,
+                               @Valid LocationDto location) {
 }

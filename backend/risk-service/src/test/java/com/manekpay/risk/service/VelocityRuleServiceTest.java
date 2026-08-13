@@ -41,7 +41,7 @@ class VelocityRuleServiceTest {
     void skipsTransactionsBelowTheHighValueThreshold() {
         VelocityRuleService service = new VelocityRuleService(redisTemplate, riskFlagRepository, riskEventPublisher);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("500.0000"), null, null, Instant.now());
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("500.0000"), null, null, Instant.now(), null, null);
 
         service.evaluate(event);
 
@@ -56,7 +56,7 @@ class VelocityRuleServiceTest {
 
         VelocityRuleService service = new VelocityRuleService(redisTemplate, riskFlagRepository, riskEventPublisher);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("1500.0000"), null, null, Instant.now());
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("1500.0000"), null, null, Instant.now(), null, null);
 
         service.evaluate(event);
 
@@ -74,7 +74,7 @@ class VelocityRuleServiceTest {
         UUID customerId = UUID.randomUUID();
         UUID transactionId = UUID.randomUUID();
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("1500.0000"), null, null, Instant.now());
+                transactionId, customerId, new BigDecimal("1500.0000"), null, null, Instant.now(), null, null);
 
         service.evaluate(event);
 
@@ -91,7 +91,7 @@ class VelocityRuleServiceTest {
         VelocityRuleService service = new VelocityRuleService(redisTemplate, riskFlagRepository, riskEventPublisher);
         UUID customerId = UUID.randomUUID();
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), customerId, new BigDecimal("1500.0000"), null, null, Instant.now());
+                UUID.randomUUID(), customerId, new BigDecimal("1500.0000"), null, null, Instant.now(), null, null);
 
         service.evaluate(event);
 
@@ -112,7 +112,7 @@ class VelocityRuleServiceTest {
         // compute a boundary ~10 minutes in the past and fail to prune anything close to now.
         Instant staleTimestamp = Instant.now().minus(Duration.ofMinutes(10));
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), customerId, new BigDecimal("1500.0000"), null, null, staleTimestamp);
+                UUID.randomUUID(), customerId, new BigDecimal("1500.0000"), null, null, staleTimestamp, null, null);
 
         service.evaluate(event);
 
@@ -131,7 +131,7 @@ class VelocityRuleServiceTest {
 
         VelocityRuleService service = new VelocityRuleService(redisTemplate, riskFlagRepository, riskEventPublisher);
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("1500.0000"), null, null, Instant.now());
+                UUID.randomUUID(), UUID.randomUUID(), new BigDecimal("1500.0000"), null, null, Instant.now(), null, null);
 
         service.evaluate(event);
 

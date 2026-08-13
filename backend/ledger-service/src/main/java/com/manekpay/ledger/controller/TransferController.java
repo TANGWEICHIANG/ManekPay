@@ -38,9 +38,11 @@ public class TransferController {
                                     @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
         UUID customerId = CurrentCustomer.id();
         TransferResponse response = transferService.transfer(customerId, CurrentCustomer.bearerToken(), request, idempotencyKey);
+        Double latitude = request.location() != null ? request.location().latitude() : null;
+        Double longitude = request.location() != null ? request.location().longitude() : null;
         eventPublisher.publishTransactionCreated(new TransactionCreatedEvent(
                 response.transferId(), customerId, response.sourceAmount(), response.sourceCurrency(),
-                CurrentCustomer.homeCurrency(), response.createdAt()));
+                CurrentCustomer.homeCurrency(), response.createdAt(), latitude, longitude));
         return response;
     }
 

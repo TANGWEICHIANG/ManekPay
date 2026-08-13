@@ -49,7 +49,7 @@ class TransactionCreatedListenerTest {
         UUID transactionId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now());
+                transactionId, customerId, new BigDecimal("12.3000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         Map<String, Object> consumerProps = new HashMap<>(KafkaTestUtils.consumerProps("vaults-service-test", "true", embeddedKafkaBroker));
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);

@@ -140,4 +140,60 @@ class TransferControllerIntegrationTest {
 
         verify(eventPublisher, times(1)).publishTransactionCreated(any());
     }
+
+    @Test
+    void transferWithLocationPublishesEventCarryingTheCoordinates() throws Exception {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        String senderSubject = UUID.randomUUID().toString();
+        UUID sender = UUID.fromString(senderSubject);
+        UUID recipient = UUID.randomUUID();
+        var senderAccount = accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        var senderWallet = walletRepository.findByAccountIdAndCurrency(senderAccount.getId(), Currency.MYR).orElseThrow();
+        senderWallet.setBalance(new BigDecimal("100.0000"));
+        walletRepository.save(senderWallet);
+
+        String requestBody = """
+                {"recipient":{"type":"ACCOUNT_NUMBER","value":"%s"},"sourceCurrency":"MYR","destCurrency":"MYR","amount":"10.0000","location":{"latitude":3.139,"longitude":101.6869}}
+                """.formatted(recipientAccountNumber);
+
+        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject)))
+                        .header("X-Idempotency-Key", UUID.randomUUID().toString())
+                        .contentType("application/json")
+                        .content(requestBody))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<TransactionCreatedEvent> eventCaptor = ArgumentCaptor.forClass(TransactionCreatedEvent.class);
+        verify(eventPublisher).publishTransactionCreated(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().latitude()).isEqualTo(3.139);
+        assertThat(eventCaptor.getValue().longitude()).isEqualTo(101.6869);
+    }
+
+    @Test
+    void transferWithNoLocationPublishesEventWithNullCoordinates() throws Exception {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        String senderSubject = UUID.randomUUID().toString();
+        UUID sender = UUID.fromString(senderSubject);
+        UUID recipient = UUID.randomUUID();
+        var senderAccount = accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        var senderWallet = walletRepository.findByAccountIdAndCurrency(senderAccount.getId(), Currency.MYR).orElseThrow();
+        senderWallet.setBalance(new BigDecimal("100.0000"));
+        walletRepository.save(senderWallet);
+
+        String requestBody = """
+                {"recipient":{"type":"ACCOUNT_NUMBER","value":"%s"},"sourceCurrency":"MYR","destCurrency":"MYR","amount":"10.0000"}
+                """.formatted(recipientAccountNumber);
+
+        mockMvc.perform(post("/transfers").with(jwt().jwt(j -> j.subject(senderSubject)))
+                        .header("X-Idempotency-Key", UUID.randomUUID().toString())
+                        .contentType("application/json")
+                        .content(requestBody))
+                .andExpect(status().isCreated());
+
+        ArgumentCaptor<TransactionCreatedEvent> eventCaptor = ArgumentCaptor.forClass(TransactionCreatedEvent.class);
+        verify(eventPublisher).publishTransactionCreated(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().latitude()).isNull();
+        assertThat(eventCaptor.getValue().longitude()).isNull();
+    }
 }

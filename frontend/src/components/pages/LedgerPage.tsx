@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import { Wallet } from 'lucide-react';
 import { Card } from '../atoms/Card';
 import { Button } from '../atoms/Button';
@@ -28,8 +28,25 @@ export function LedgerPage() {
   const [destCurrency, setDestCurrency] = useState<Currency>(Currency.MYR);
   const [amount, setAmount] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [editingLocation, setEditingLocation] = useState(false);
 
   const { data: fxRate } = useFxRate(sourceCurrency, destCurrency !== sourceCurrency ? destCurrency : null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLatitude(position.coords.latitude);
+        setLongitude(position.coords.longitude);
+      },
+      () => {
+        // Permission denied or unavailable - location stays unset, which is a valid state;
+        // the transfer still succeeds and the anomaly check is simply skipped for it.
+      }
+    );
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -40,6 +57,7 @@ export function LedgerPage() {
           sourceCurrency,
           destCurrency,
           amount,
+          location: latitude !== null && longitude !== null ? { latitude, longitude } : undefined,
         },
         idempotencyKey,
       },
@@ -121,6 +139,40 @@ export function LedgerPage() {
                 </option>
               ))}
             </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">Location</span>
+              <button
+                type="button"
+                onClick={() => setEditingLocation((prev) => !prev)}
+                className="text-sm text-primary underline"
+              >
+                {editingLocation ? 'Done' : 'Edit location'}
+              </button>
+            </div>
+            {editingLocation ? (
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Latitude"
+                  type="number"
+                  step="any"
+                  value={latitude ?? ''}
+                  onChange={(e) => setLatitude(e.target.value === '' ? null : Number(e.target.value))}
+                />
+                <Input
+                  label="Longitude"
+                  type="number"
+                  step="any"
+                  value={longitude ?? ''}
+                  onChange={(e) => setLongitude(e.target.value === '' ? null : Number(e.target.value))}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-muted">
+                {latitude !== null && longitude !== null ? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` : 'Location not set'}
+              </p>
+            )}
           </div>
           <Input
             label="Amount"
