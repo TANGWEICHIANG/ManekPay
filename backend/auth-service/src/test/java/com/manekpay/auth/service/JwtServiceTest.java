@@ -65,4 +65,16 @@ class JwtServiceTest {
         assertThat(id1).isNotEqualTo(id2);
         assertThat(UUID.fromString(id1)).isNotNull();
     }
+
+    @Test
+    void issuedServiceTokenValidatesWithSubjectAndScopeClaims() throws Exception {
+        JwtService service = newServiceWithFreshKeyPair();
+
+        String token = service.issueServiceToken("vaults-service", "vault-sweep");
+        Optional<Claims> claims = service.validate(token);
+
+        assertThat(claims).isPresent();
+        assertThat(claims.get().getSubject()).isEqualTo("vaults-service");
+        assertThat(claims.get().get("scope")).isEqualTo("vault-sweep");
+    }
 }

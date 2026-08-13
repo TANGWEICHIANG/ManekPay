@@ -20,6 +20,7 @@ import java.time.Duration;
 public class IdempotencyFilter extends OncePerRequestFilter {
 
     private static final Duration TTL = Duration.ofHours(24);
+    private static final java.util.Set<String> IDEMPOTENT_PATHS = java.util.Set.of("/transfers", "/internal/wallets/debit");
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
@@ -31,7 +32,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !("POST".equals(request.getMethod()) && "/transfers".equals(request.getRequestURI()));
+        return !("POST".equals(request.getMethod()) && IDEMPOTENT_PATHS.contains(request.getRequestURI()));
     }
 
     @Override

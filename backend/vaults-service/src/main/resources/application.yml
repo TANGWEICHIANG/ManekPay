@@ -36,6 +36,16 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+app:
+  auth-service:
+    base-url: ${AUTH_SERVICE_URL:http://localhost:8086}
+  ledger-service:
+    base-url: ${LEDGER_SERVICE_URL:http://localhost:8081}
+  service-credentials:
+    # Must match auth-service's app.service-credentials.vaults-service-secret exactly. DEV-ONLY
+    # default - override VAULTS_SERVICE_CLIENT_SECRET from a secrets manager before deploying.
+    client-secret: "${VAULTS_SERVICE_CLIENT_SECRET:dev-only-vaults-service-secret-change-me}"
+
 management:
   endpoints:
     web:

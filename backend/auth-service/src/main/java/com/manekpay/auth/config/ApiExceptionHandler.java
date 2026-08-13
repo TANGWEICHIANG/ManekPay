@@ -3,6 +3,7 @@ package com.manekpay.auth.config;
 import com.manekpay.auth.dto.ErrorResponse;
 import com.manekpay.auth.exception.DuplicateEmailException;
 import com.manekpay.auth.exception.InvalidCredentialsException;
+import com.manekpay.auth.exception.InvalidServiceCredentialsException;
 import com.manekpay.auth.exception.InvalidTokenException;
 import com.manekpay.auth.exception.ForbiddenInquiryAccessException;
 import com.manekpay.auth.exception.InquiryNotFoundException;
@@ -34,6 +35,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidServiceCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidServiceCredentials(InvalidServiceCredentialsException ex, HttpServletRequest request) {
         return build(HttpStatus.UNAUTHORIZED, ex.getMessage(), request);
     }
 

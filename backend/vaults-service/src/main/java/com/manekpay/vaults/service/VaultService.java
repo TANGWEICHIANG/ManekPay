@@ -46,7 +46,7 @@ public class VaultService {
         if (roundUp.signum() == 0) {
             return;
         }
-        Vault vault = vaultRepository.findByCustomerId(event.customerId())
+        Vault vault = vaultRepository.findByCustomerIdAndNameIsNull(event.customerId())
                 .orElseGet(() -> vaultRepository.save(new Vault(event.customerId(), event.homeCurrency())));
         // A customer's resolved home currency can change between transfers (e.g. they resubmit
         // KYC with a different declared nationality) - once a vault exists in a currency, later
