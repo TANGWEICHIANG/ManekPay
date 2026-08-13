@@ -18,6 +18,7 @@ import java.util.UUID;
 public class JwtService {
 
     public static final Duration ACCESS_TOKEN_TTL = Duration.ofMinutes(15);
+    public static final Duration SERVICE_TOKEN_TTL = Duration.ofMinutes(5);
 
     private final RSAPrivateKey privateKey;
     private final RSAPublicKey publicKey;
@@ -40,6 +41,22 @@ public class JwtService {
                 .claim("email", email)
                 .claim("kycStatus", kycStatus.name())
                 .claim("homeCurrency", homeCurrency)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(privateKey, SignatureAlgorithm.RS256)
+                .compact();
+    }
+
+    // Issues a token for a *service*, not a customer — subject is the calling service's client
+    // id (e.g. "vaults-service"), not a customer UUID. Signed with the same key as customer
+    // access tokens, so downstream services validate both the same way via JWKS; the `scope`
+    // claim is what lets a resource server tell the two apart and gate service-only endpoints.
+    public String issueServiceToken(String clientId, String scope) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + SERVICE_TOKEN_TTL.toMillis());
+        return Jwts.builder()
+                .setSubject(clientId)
+                .claim("scope", scope)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(privateKey, SignatureAlgorithm.RS256)
