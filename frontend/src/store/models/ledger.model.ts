@@ -37,6 +37,7 @@ export interface TransferRequestBody {
   sourceCurrency: Currency;
   destCurrency: Currency;
   amount: string;
+  location?: { latitude: number; longitude: number };
 }
 
 export interface Transfer {
