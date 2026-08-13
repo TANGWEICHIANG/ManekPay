@@ -49,7 +49,7 @@ class TransactionCreatedListenerTest {
         UUID transactionId = UUID.randomUUID();
         UUID customerId = UUID.randomUUID();
         TransactionCreatedEvent event = new TransactionCreatedEvent(
-                transactionId, customerId, new BigDecimal("1500.0000"), Currency.MYR, Currency.MYR, Instant.now());
+                transactionId, customerId, new BigDecimal("1500.0000"), Currency.MYR, Currency.MYR, Instant.now(), null, null);
 
         Map<String, Object> consumerProps = new HashMap<>(KafkaTestUtils.consumerProps("risk-service-test", "true", embeddedKafkaBroker));
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -72,10 +72,12 @@ class TransactionCreatedListenerTest {
             assertThat(received.value().currency()).isEqualTo(Currency.MYR);
 
             VelocityRuleService velocityRuleService = Mockito.mock(VelocityRuleService.class);
-            TransactionCreatedListener listener = new TransactionCreatedListener(velocityRuleService);
+            LocationAnomalyRuleService locationAnomalyRuleService = Mockito.mock(LocationAnomalyRuleService.class);
+            TransactionCreatedListener listener = new TransactionCreatedListener(velocityRuleService, locationAnomalyRuleService);
             listener.onTransactionCreated(received.value());
 
             verify(velocityRuleService).evaluate(received.value());
+            verify(locationAnomalyRuleService).evaluate(received.value());
         }
     }
 }
