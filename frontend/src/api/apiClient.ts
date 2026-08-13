@@ -5,7 +5,7 @@ import type { TokenResponse } from '../store/models/auth.model';
 const BASE_URL = `${import.meta.env.VITE_API_URL || ''}/api`;
 
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   isFormData?: boolean;
   headers?: Record<string, string>;

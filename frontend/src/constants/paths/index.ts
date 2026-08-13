@@ -27,6 +27,8 @@ export const API_PATHS = {
   },
   VAULTS: {
     ME: '/vaults/me',
+    GOALS: '/vaults/goals',
+    GOAL: (id: string) => `/vaults/goals/${id}`,
   },
   RISK: {
     FLAGS: '/risk/flags/me',
