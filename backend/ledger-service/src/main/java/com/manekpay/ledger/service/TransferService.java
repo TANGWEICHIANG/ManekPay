@@ -14,6 +14,7 @@ import com.manekpay.ledger.entity.ProxyType;
 import com.manekpay.ledger.entity.Transfer;
 import com.manekpay.ledger.entity.Wallet;
 import com.manekpay.ledger.exception.AccountRestrictedException;
+import com.manekpay.ledger.exception.FxServiceUnavailableException;
 import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.RecipientNotFoundException;
@@ -91,6 +92,12 @@ public class TransferService {
 
         boolean crossCurrency = request.sourceCurrency() != request.destCurrency();
         BigDecimal fxRate = crossCurrency ? fxRateProvider.getRate(request.sourceCurrency(), request.destCurrency(), bearerToken) : null;
+        if (crossCurrency && fxRate == null) {
+            // An empty/malformed rate must fail closed like any other fx-service unavailability,
+            // not NPE on the multiply below - there is no fallback for the main transfer's own
+            // conversion the way there is for the optional top-up.
+            throw new FxServiceUnavailableException(new IllegalStateException("fx-service returned an empty rate"));
+        }
         BigDecimal destAmount = crossCurrency
                 ? request.amount().multiply(fxRate).setScale(4, RoundingMode.HALF_EVEN)
                 : request.amount();
