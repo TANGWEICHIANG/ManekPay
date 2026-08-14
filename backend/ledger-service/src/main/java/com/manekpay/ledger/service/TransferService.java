@@ -24,6 +24,7 @@ import com.manekpay.ledger.repository.AccountRepository;
 import com.manekpay.ledger.repository.LedgerEntryRepository;
 import com.manekpay.ledger.repository.TransferRepository;
 import com.manekpay.ledger.repository.WalletRepository;
+import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,12 +48,13 @@ public class TransferService {
     private final FxRateProvider fxRateProvider;
     private final AuthServiceClient authServiceClient;
     private final RiskServiceClient riskServiceClient;
+    private final EntityManager entityManager;
 
     public TransferService(AccountService accountService, AccountRepository accountRepository,
                             AccountProxyRepository proxyRepository, WalletRepository walletRepository,
                             TransferRepository transferRepository, LedgerEntryRepository ledgerEntryRepository,
                             FxRateProvider fxRateProvider, AuthServiceClient authServiceClient,
-                            RiskServiceClient riskServiceClient) {
+                            RiskServiceClient riskServiceClient, EntityManager entityManager) {
         this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.proxyRepository = proxyRepository;
@@ -62,6 +64,7 @@ public class TransferService {
         this.fxRateProvider = fxRateProvider;
         this.authServiceClient = authServiceClient;
         this.riskServiceClient = riskServiceClient;
+        this.entityManager = entityManager;
     }
 
     @Transactional
@@ -148,8 +151,18 @@ public class TransferService {
 
         Map<UUID, Wallet> locked = new HashMap<>();
         for (UUID walletId : walletIdsToLock) {
-            locked.put(walletId, walletRepository.findByIdForUpdate(walletId)
-                    .orElseThrow(() -> new IllegalStateException("Wallet disappeared mid-transfer: " + walletId)));
+            Wallet wallet = walletRepository.findByIdForUpdate(walletId)
+                    .orElseThrow(() -> new IllegalStateException("Wallet disappeared mid-transfer: " + walletId));
+            // findByIdForUpdate's SELECT ... FOR UPDATE correctly acquires the row lock, but every
+            // wallet reaching this loop was already loaded unlocked earlier in this method (as
+            // senderWalletRef, recipientWalletRef, or one of the clearing/home refs) - Hibernate's
+            // persistence-context identity map returns that same, already-managed instance rather
+            // than re-hydrating it from this query's result, so the in-memory balance can still be
+            // the pre-lock snapshot even though the correct DB-level lock was acquired. Force a real
+            // reload now that the lock is held, or a concurrent update committed between the
+            // unlocked read and this point is invisible to every balance check below.
+            entityManager.refresh(wallet);
+            locked.put(walletId, wallet);
         }
 
         Wallet senderWallet = locked.get(senderWalletRef.getId());
