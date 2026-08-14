@@ -32,6 +32,7 @@ class ServiceTokenControllerIntegrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("app.service-credentials.vaults-service-secret", () -> "test-secret");
+        registry.add("app.service-credentials.ledger-service-secret", () -> "test-ledger-secret");
     }
 
     @Autowired
@@ -52,6 +53,24 @@ class ServiceTokenControllerIntegrationTest {
         mockMvc.perform(post("/service-token")
                         .contentType("application/json")
                         .content("{\"clientId\":\"vaults-service\",\"clientSecret\":\"wrong\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void issuesATokenForLedgerServiceWithValidCredentials() throws Exception {
+        mockMvc.perform(post("/service-token")
+                        .contentType("application/json")
+                        .content("{\"clientId\":\"ledger-service\",\"clientSecret\":\"test-ledger-secret\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.expiresIn").value(300));
+    }
+
+    @Test
+    void rejectsAnUnknownClientIdWith401() throws Exception {
+        mockMvc.perform(post("/service-token")
+                        .contentType("application/json")
+                        .content("{\"clientId\":\"not-a-real-service\",\"clientSecret\":\"anything\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }

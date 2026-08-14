@@ -6,33 +6,36 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Map;
 
 @Service
 public class ServiceTokenService {
 
-    // Only one service client exists today. If a second one is ever needed, this becomes a map
-    // keyed by clientId — not built now (YAGNI) since there's nothing to look up yet.
-    private static final String KNOWN_CLIENT_ID = "vaults-service";
-    private static final String SCOPE = "vault-sweep";
-
     private final JwtService jwtService;
-    private final String vaultsServiceSecret;
+    private final Map<String, ServiceClient> knownClients;
 
     public ServiceTokenService(JwtService jwtService,
-                                @Value("${app.service-credentials.vaults-service-secret}") String vaultsServiceSecret) {
+                                @Value("${app.service-credentials.vaults-service-secret}") String vaultsServiceSecret,
+                                @Value("${app.service-credentials.ledger-service-secret}") String ledgerServiceSecret) {
         this.jwtService = jwtService;
-        this.vaultsServiceSecret = vaultsServiceSecret;
+        this.knownClients = Map.of(
+                "vaults-service", new ServiceClient(vaultsServiceSecret, "vault-sweep"),
+                "ledger-service", new ServiceClient(ledgerServiceSecret, "risk-check"));
     }
 
     public String issueToken(String clientId, String clientSecret) {
-        if (!KNOWN_CLIENT_ID.equals(clientId) || !constantTimeEquals(clientSecret, vaultsServiceSecret)) {
+        ServiceClient client = knownClients.get(clientId);
+        if (client == null || !constantTimeEquals(clientSecret, client.secret())) {
             throw new InvalidServiceCredentialsException();
         }
-        return jwtService.issueServiceToken(clientId, SCOPE);
+        return jwtService.issueServiceToken(clientId, client.scope());
     }
 
     // security.md: use constant-time comparison for secrets and tokens.
     private static boolean constantTimeEquals(String a, String b) {
         return MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8), b.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private record ServiceClient(String secret, String scope) {
     }
 }
