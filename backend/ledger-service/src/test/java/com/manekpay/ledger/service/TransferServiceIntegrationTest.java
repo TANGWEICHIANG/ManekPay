@@ -245,6 +245,25 @@ class TransferServiceIntegrationTest {
     }
 
     @Test
+    void crossCurrencyTransferFailsClosedWhenFxRateIsEmpty() {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        UUID sender = UUID.randomUUID();
+        UUID recipient = UUID.randomUUID();
+        accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        creditWallet(sender, Currency.MYR, new BigDecimal("100.0000"));
+        when(fxRateProvider.getRate(eq(Currency.MYR), eq(Currency.USD), any())).thenReturn(null);
+
+        assertThatThrownBy(() -> transferService.transfer(sender, "token", Currency.MYR,
+                new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
+                        Currency.MYR, Currency.USD, new BigDecimal("40.0000"), null),
+                "idem-" + UUID.randomUUID()))
+                .isInstanceOf(com.manekpay.ledger.exception.FxServiceUnavailableException.class);
+
+        assertThat(walletFor(sender, Currency.MYR).getBalance()).isEqualByComparingTo("100.0000");
+    }
+
+    @Test
     void concurrentTransfersFromTheSameWalletDoNotLoseUpdates() throws Exception {
         when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
         UUID sender = UUID.randomUUID();

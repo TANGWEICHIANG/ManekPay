@@ -4,6 +4,7 @@ import com.manekpay.ledger.dto.RiskStatusResponse;
 import com.manekpay.ledger.exception.RiskServiceUnavailableException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -13,12 +14,19 @@ import java.util.UUID;
 @Component
 public class RiskServiceClient {
 
+    // Same-network, service-to-service call - 5s is generous headroom without leaving a request
+    // thread parked indefinitely if risk-service hangs instead of refusing the connection.
+    private static final int TIMEOUT_MILLIS = 5000;
+
     private final RestClient restClient;
     private final ServiceTokenProvider serviceTokenProvider;
 
     public RiskServiceClient(@Value("${app.risk-service.base-url}") String riskServiceBaseUrl,
                               ServiceTokenProvider serviceTokenProvider) {
-        this.restClient = RestClient.create(riskServiceBaseUrl);
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(TIMEOUT_MILLIS);
+        requestFactory.setReadTimeout(TIMEOUT_MILLIS);
+        this.restClient = RestClient.builder().baseUrl(riskServiceBaseUrl).requestFactory(requestFactory).build();
         this.serviceTokenProvider = serviceTokenProvider;
     }
 
