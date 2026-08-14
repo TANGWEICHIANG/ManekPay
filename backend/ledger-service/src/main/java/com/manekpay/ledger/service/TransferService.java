@@ -6,6 +6,7 @@ import com.manekpay.ledger.dto.TransferResponse;
 import com.manekpay.ledger.dto.TransfersResponse;
 import com.manekpay.ledger.entity.Account;
 import com.manekpay.ledger.entity.AccountProxy;
+import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.entity.Direction;
 import com.manekpay.ledger.entity.LedgerEntry;
 import com.manekpay.ledger.entity.ProxyType;
@@ -27,7 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +60,8 @@ public class TransferService {
     }
 
     @Transactional
-    public TransferResponse transfer(UUID customerId, String bearerToken, TransferRequest request, String idempotencyKey) {
+    public TransferResponse transfer(UUID customerId, String bearerToken, Currency homeCurrency,
+                                      TransferRequest request, String idempotencyKey) {
         if (!"APPROVED".equals(authServiceClient.getLiveKycStatus(bearerToken))) {
             throw new KycNotApprovedException();
         }
@@ -82,8 +83,32 @@ public class TransferService {
                 ? request.amount().multiply(fxRate).setScale(4, RoundingMode.HALF_EVEN)
                 : request.amount();
 
+        // A customer whose home currency differs from this transfer's source currency is
+        // eligible for an automatic top-up if the source wallet falls short - see BR-2.3.
+        boolean topUpEligible = homeCurrency != request.sourceCurrency();
+        // An unlocked pre-read: only worth fetching the top-up rate or including the home-currency/
+        // clearing wallets in the lock set if the source wallet actually looks short right now. This is
+        // a scoping optimization, not a correctness check - if a concurrent debit lands between this
+        // read and the lock being acquired, this optimization may occasionally skip a top-up that
+        // (depending on read/lock semantics) could still have been served, or lock the home wallets
+        // unnecessarily when none was needed after all - either way the unified balance check below
+        // still throws InsufficientBalanceException exactly as it would have before this feature
+        // existed, never letting an underfunded transfer through.
+        boolean topUpLikelyNeeded = topUpEligible && senderWalletRef.getBalance().compareTo(request.amount()) < 0;
+        // The top-up rate is fetched here, before any wallet is locked, for the same reason the main
+        // transfer's own fxRate above is fetched before locking: an external HTTP call must never run
+        // while holding FOR UPDATE on shared rows (the clearing wallets are process-wide singletons -
+        // holding their locks during a slow/blocked fx-service call would serialize every transfer in
+        // that currency pair). Gated on topUpLikelyNeeded, not merely topUpEligible, so a fully-funded
+        // transfer where home != source never pays this call or depends on fx-service being reachable.
+        BigDecimal homeToSourceRate = topUpLikelyNeeded
+                ? fxRateProvider.getRate(homeCurrency, request.sourceCurrency(), bearerToken)
+                : null;
+
         Wallet sourceClearingRef = null;
         Wallet destClearingRef = null;
+        Wallet homeWalletRef = null;
+        Wallet homeClearingRef = null;
         List<UUID> walletIdsToLock = new ArrayList<>(List.of(senderWalletRef.getId(), recipientWalletRef.getId()));
         if (crossCurrency) {
             sourceClearingRef = walletRepository.findByAccountIdIsNullAndCurrency(request.sourceCurrency())
@@ -93,7 +118,24 @@ public class TransferService {
             walletIdsToLock.add(sourceClearingRef.getId());
             walletIdsToLock.add(destClearingRef.getId());
         }
-        walletIdsToLock.sort(Comparator.naturalOrder());
+        if (topUpLikelyNeeded) {
+            homeWalletRef = walletRepository.findByAccountIdAndCurrency(senderAccount.getId(), homeCurrency)
+                    .orElseThrow(() -> new IllegalStateException("Missing home-currency wallet for " + homeCurrency));
+            homeClearingRef = walletRepository.findByAccountIdIsNullAndCurrency(homeCurrency)
+                    .orElseThrow(() -> new IllegalStateException("Missing clearing wallet for " + homeCurrency));
+            walletIdsToLock.add(homeWalletRef.getId());
+            walletIdsToLock.add(homeClearingRef.getId());
+            if (sourceClearingRef == null) {
+                sourceClearingRef = walletRepository.findByAccountIdIsNullAndCurrency(request.sourceCurrency())
+                        .orElseThrow(() -> new IllegalStateException("Missing clearing wallet for " + request.sourceCurrency()));
+                walletIdsToLock.add(sourceClearingRef.getId());
+            }
+        }
+        // Dedupe before sorting: the home-currency clearing wallet and the destination-currency
+        // clearing wallet are the same row whenever destCurrency == homeCurrency (a transfer that is
+        // both cross-currency and top-up-eligible, converting into the customer's own home currency) -
+        // findByIdForUpdate must be called once per wallet, not twice.
+        walletIdsToLock = walletIdsToLock.stream().distinct().sorted().toList();
 
         Map<UUID, Wallet> locked = new HashMap<>();
         for (UUID walletId : walletIdsToLock) {
@@ -102,13 +144,69 @@ public class TransferService {
         }
 
         Wallet senderWallet = locked.get(senderWalletRef.getId());
-        if (senderWallet.getBalance().compareTo(request.amount()) < 0) {
+
+        // Determine whether a top-up is needed and, if so, whether the home wallet can cover it -
+        // purely a check here, no mutation yet. All balance checks must complete before the
+        // Transfer row is created below (ledger tables are append-only; a failed attempt must
+        // never leave a row behind).
+        BigDecimal topUpAmount = null;
+        Currency topUpCurrency = null;
+        BigDecimal topUpFxRate = null;
+        BigDecimal topUpAmountInSourceCurrency = null;
+        if (homeWalletRef != null && homeToSourceRate != null && homeToSourceRate.signum() > 0
+                && senderWallet.getBalance().compareTo(request.amount()) < 0) {
+            BigDecimal shortfall = request.amount().subtract(senderWallet.getBalance());
+            BigDecimal shortfallInHomeCurrency = shortfall.divide(homeToSourceRate, 4, RoundingMode.HALF_EVEN);
+
+            Wallet homeWallet = locked.get(homeWalletRef.getId());
+            if (homeWallet.getBalance().compareTo(shortfallInHomeCurrency) >= 0) {
+                topUpAmount = shortfallInHomeCurrency;
+                topUpCurrency = homeCurrency;
+                topUpFxRate = homeToSourceRate;
+                topUpAmountInSourceCurrency = shortfall;
+            }
+        }
+
+        // Single unified check: passes trivially when there was no shortfall, passes when a
+        // top-up was found and fully covers the shortfall, and correctly still fails when
+        // topUpAmountInSourceCurrency is null (no top-up was eligible, or the home wallet
+        // couldn't cover it) - matching today's behavior exactly in that case.
+        BigDecimal effectiveBalance = topUpAmountInSourceCurrency != null
+                ? senderWallet.getBalance().add(topUpAmountInSourceCurrency)
+                : senderWallet.getBalance();
+        if (effectiveBalance.compareTo(request.amount()) < 0) {
             throw new InsufficientBalanceException();
         }
         Wallet recipientWallet = locked.get(recipientWalletRef.getId());
 
         Transfer transfer = transferRepository.save(new Transfer(senderWallet.getId(), recipientWallet.getId(),
-                request.amount(), request.sourceCurrency(), destAmount, request.destCurrency(), fxRate, idempotencyKey));
+                request.amount(), request.sourceCurrency(), destAmount, request.destCurrency(), fxRate, idempotencyKey,
+                topUpAmount, topUpCurrency, topUpFxRate));
+
+        if (topUpAmount != null) {
+            Wallet homeWallet = locked.get(homeWalletRef.getId());
+            homeWallet.setBalance(homeWallet.getBalance().subtract(topUpAmount));
+            walletRepository.save(homeWallet);
+            ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), homeWallet.getId(), Direction.DEBIT,
+                    topUpAmount, homeCurrency, homeWallet.getBalance()));
+
+            Wallet homeClearing = locked.get(homeClearingRef.getId());
+            homeClearing.setBalance(homeClearing.getBalance().add(topUpAmount));
+            walletRepository.save(homeClearing);
+            ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), homeClearing.getId(), Direction.CREDIT,
+                    topUpAmount, homeCurrency, homeClearing.getBalance()));
+
+            Wallet sourceClearingForTopUp = locked.get(sourceClearingRef.getId());
+            sourceClearingForTopUp.setBalance(sourceClearingForTopUp.getBalance().subtract(topUpAmountInSourceCurrency));
+            walletRepository.save(sourceClearingForTopUp);
+            ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), sourceClearingForTopUp.getId(), Direction.DEBIT,
+                    topUpAmountInSourceCurrency, request.sourceCurrency(), sourceClearingForTopUp.getBalance()));
+
+            senderWallet.setBalance(senderWallet.getBalance().add(topUpAmountInSourceCurrency));
+            walletRepository.save(senderWallet);
+            ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), senderWallet.getId(), Direction.CREDIT,
+                    topUpAmountInSourceCurrency, request.sourceCurrency(), senderWallet.getBalance()));
+        }
 
         senderWallet.setBalance(senderWallet.getBalance().subtract(request.amount()));
         walletRepository.save(senderWallet);
@@ -116,6 +214,10 @@ public class TransferService {
                 request.amount(), request.sourceCurrency(), senderWallet.getBalance()));
 
         if (crossCurrency) {
+            // sourceClearingRef may be the same wallet the top-up block above already debited
+            // (when this transfer is both cross-currency and top-up-eligible) - locked.get(...)
+            // returns that same, already-mutated instance, so this credit applies on top of it
+            // rather than overwriting it.
             Wallet sourceClearing = locked.get(sourceClearingRef.getId());
             sourceClearing.setBalance(sourceClearing.getBalance().add(request.amount()));
             walletRepository.save(sourceClearing);
@@ -175,6 +277,7 @@ public class TransferService {
 
     private TransferResponse toResponse(Transfer transfer) {
         return new TransferResponse(transfer.getId(), transfer.getSourceAmount(), transfer.getSourceCurrency(),
-                transfer.getDestAmount(), transfer.getDestCurrency(), transfer.getFxRate(), transfer.getCreatedAt());
+                transfer.getDestAmount(), transfer.getDestCurrency(), transfer.getFxRate(), transfer.getCreatedAt(),
+                transfer.getTopUpAmount(), transfer.getTopUpCurrency(), transfer.getTopUpFxRate());
     }
 }

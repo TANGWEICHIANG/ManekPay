@@ -5,6 +5,7 @@ import com.manekpay.ledger.dto.TransactionCreatedEvent;
 import com.manekpay.ledger.dto.TransferRequest;
 import com.manekpay.ledger.dto.TransferResponse;
 import com.manekpay.ledger.dto.TransfersResponse;
+import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.service.TransactionEventPublisher;
 import com.manekpay.ledger.service.TransferService;
 import jakarta.validation.Valid;
@@ -37,12 +38,13 @@ public class TransferController {
     public TransferResponse create(@Valid @RequestBody TransferRequest request,
                                     @RequestHeader("X-Idempotency-Key") String idempotencyKey) {
         UUID customerId = CurrentCustomer.id();
-        TransferResponse response = transferService.transfer(customerId, CurrentCustomer.bearerToken(), request, idempotencyKey);
+        Currency homeCurrency = CurrentCustomer.homeCurrency();
+        TransferResponse response = transferService.transfer(customerId, CurrentCustomer.bearerToken(), homeCurrency, request, idempotencyKey);
         Double latitude = request.location() != null ? request.location().latitude() : null;
         Double longitude = request.location() != null ? request.location().longitude() : null;
         eventPublisher.publishTransactionCreated(new TransactionCreatedEvent(
                 response.transferId(), customerId, response.sourceAmount(), response.sourceCurrency(),
-                CurrentCustomer.homeCurrency(), response.createdAt(), latitude, longitude));
+                homeCurrency, response.createdAt(), latitude, longitude));
         return response;
     }
 
