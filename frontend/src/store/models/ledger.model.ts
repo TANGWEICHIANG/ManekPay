@@ -48,6 +48,9 @@ export interface Transfer {
   destCurrency: Currency;
   fxRate: number | null;
   createdAt: string;
+  topUpAmount: number | null;
+  topUpCurrency: Currency | null;
+  topUpFxRate: number | null;
 }
 
 export interface TransfersResponse {

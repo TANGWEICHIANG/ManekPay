@@ -3,3 +3,4 @@ target/
 docs/
 sql/
 CLAUDE.local.md
+.claude/worktrees/

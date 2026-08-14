@@ -199,11 +199,18 @@ export function LedgerPage() {
         {transfersData && transfersData.transfers.length > 0 ? (
           <div className="flex flex-col gap-2">
             {transfersData.transfers.map((t) => (
-              <Card key={t.transferId} className="flex items-center justify-between">
-                <span className="tabular-nums text-foreground">
-                  {t.sourceAmount} {t.sourceCurrency} → {t.destAmount} {t.destCurrency}
-                </span>
-                <span className="text-sm text-muted">{new Date(t.createdAt).toLocaleString()}</span>
+              <Card key={t.transferId} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="tabular-nums text-foreground">
+                    {t.sourceAmount} {t.sourceCurrency} → {t.destAmount} {t.destCurrency}
+                  </span>
+                  <span className="text-sm text-muted">{new Date(t.createdAt).toLocaleString()}</span>
+                </div>
+                {t.topUpAmount != null && t.topUpCurrency != null && (
+                  <span className="text-sm text-muted">
+                    <span className="tabular-nums">{t.topUpAmount.toFixed(2)}</span> {t.topUpCurrency} converted from your {t.topUpCurrency} wallet to cover this transfer.
+                  </span>
+                )}
               </Card>
             ))}
           </div>

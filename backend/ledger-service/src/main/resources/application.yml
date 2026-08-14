@@ -43,3 +43,9 @@ app:
     base-url: ${AUTH_SERVICE_URL:http://localhost:8086}
   fx-service:
     base-url: ${FX_SERVICE_URL:http://localhost:8082}
+  risk-service:
+    base-url: ${RISK_SERVICE_URL:http://localhost:8084}
+  service-credentials:
+    # Must match auth-service's app.service-credentials.ledger-service-secret exactly. DEV-ONLY
+    # default - override LEDGER_SERVICE_CLIENT_SECRET from a secrets manager before deploying.
+    client-secret: "${LEDGER_SERVICE_CLIENT_SECRET:dev-only-ledger-service-secret-change-me}"

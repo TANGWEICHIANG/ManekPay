@@ -81,7 +81,7 @@ class RepositorySmokeTest {
 
         Transfer transfer = transferRepository.save(new Transfer(myrWallet.getId(), usdWallet.getId(),
                 new BigDecimal("100.0000"), Currency.MYR, new BigDecimal("22.0000"), Currency.USD,
-                new BigDecimal("0.22000000"), "idem-key-1"));
+                new BigDecimal("0.22000000"), "idem-key-1", null, null, null));
         assertThat(transfer.getId()).isNotNull();
 
         LedgerEntry debitEntry = ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), myrWallet.getId(),

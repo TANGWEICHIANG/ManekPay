@@ -39,6 +39,16 @@ public class Transfer {
     @Column(name = "idempotency_key", unique = true)
     private String idempotencyKey;
 
+    @Column(name = "top_up_amount")
+    private BigDecimal topUpAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "top_up_currency")
+    private Currency topUpCurrency;
+
+    @Column(name = "top_up_fx_rate")
+    private BigDecimal topUpFxRate;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -46,7 +56,8 @@ public class Transfer {
     }
 
     public Transfer(UUID fromWalletId, UUID toWalletId, BigDecimal sourceAmount, Currency sourceCurrency,
-                     BigDecimal destAmount, Currency destCurrency, BigDecimal fxRate, String idempotencyKey) {
+                     BigDecimal destAmount, Currency destCurrency, BigDecimal fxRate, String idempotencyKey,
+                     BigDecimal topUpAmount, Currency topUpCurrency, BigDecimal topUpFxRate) {
         this.fromWalletId = fromWalletId;
         this.toWalletId = toWalletId;
         this.sourceAmount = sourceAmount;
@@ -55,6 +66,9 @@ public class Transfer {
         this.destCurrency = destCurrency;
         this.fxRate = fxRate;
         this.idempotencyKey = idempotencyKey;
+        this.topUpAmount = topUpAmount;
+        this.topUpCurrency = topUpCurrency;
+        this.topUpFxRate = topUpFxRate;
     }
 
     public UUID getId() {
@@ -91,6 +105,18 @@ public class Transfer {
 
     public String getIdempotencyKey() {
         return idempotencyKey;
+    }
+
+    public BigDecimal getTopUpAmount() {
+        return topUpAmount;
+    }
+
+    public Currency getTopUpCurrency() {
+        return topUpCurrency;
+    }
+
+    public BigDecimal getTopUpFxRate() {
+        return topUpFxRate;
     }
 
     public Instant getCreatedAt() {

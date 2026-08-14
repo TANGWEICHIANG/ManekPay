@@ -1,6 +1,7 @@
 package com.manekpay.ledger.config;
 
 import com.manekpay.ledger.dto.ErrorResponse;
+import com.manekpay.ledger.exception.AccountRestrictedException;
 import com.manekpay.ledger.exception.AuthServiceUnavailableException;
 import com.manekpay.ledger.exception.DuplicateProxyException;
 import com.manekpay.ledger.exception.FxServiceUnavailableException;
@@ -8,6 +9,7 @@ import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.ProxyNotFoundException;
 import com.manekpay.ledger.exception.RecipientNotFoundException;
+import com.manekpay.ledger.exception.RiskServiceUnavailableException;
 import com.manekpay.ledger.exception.SelfTransferException;
 import com.manekpay.ledger.exception.TransferNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -76,6 +78,17 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(FxServiceUnavailableException.class)
     public ResponseEntity<ErrorResponse> handleFxServiceUnavailable(FxServiceUnavailableException ex, HttpServletRequest request) {
         log.error("fx-service unreachable on {} {}", request.getMethod(), request.getRequestURI(), ex.getCause());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccountRestrictedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountRestricted(AccountRestrictedException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(RiskServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleRiskServiceUnavailable(RiskServiceUnavailableException ex, HttpServletRequest request) {
+        log.error("risk-service unreachable on {} {}", request.getMethod(), request.getRequestURI(), ex.getCause());
         return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request);
     }
 

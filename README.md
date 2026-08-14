@@ -56,6 +56,10 @@ See [`PLANNING.md`](PLANNING.md) for the full business requirements and architec
 
 To run the whole backend test suite: `mvn test` from the repo root (DB/Kafka integration tests that need Testcontainers require a working Docker environment).
 
+## API Documentation
+
+Each service exposes interactive Swagger UI directly on its own port (not routed through the nginx gateway): `http://localhost:<port>/swagger-ui.html`, e.g. `http://localhost:8081/swagger-ui.html` for `ledger-service`. Use the "Authorize" button to attach a JWT and try protected endpoints directly from the docs.
+
 ## Running in Dev
 
 The `dev` mode targets a shared, longer-lived environment rather than your own machine, using the same services but built as containers instead of run via `mvn spring-boot:run`:

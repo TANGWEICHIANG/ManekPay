@@ -17,7 +17,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/error").permitAll()
+                        .requestMatchers("/actuator/health", "/error", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/internal/**").hasAuthority("SCOPE_vault-sweep")
                         .anyRequest().authenticated()
                 )
