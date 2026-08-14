@@ -41,7 +41,7 @@ public class SecurityConfig {
                     objectMapper.writeValue(response.getWriter(), body);
                 }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/register", "/login", "/refresh", "/logout", "/service-token", "/.well-known/jwks.json", "/actuator/health", "/error")
+                        .requestMatchers("/register", "/login", "/refresh", "/logout", "/service-token", "/.well-known/jwks.json", "/actuator/health", "/error", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                         .permitAll()
                         .anyRequest().authenticated()
                 )
