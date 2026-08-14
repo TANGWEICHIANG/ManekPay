@@ -2,11 +2,13 @@ package com.manekpay.ledger.service;
 
 import com.manekpay.ledger.dto.RecipientDto;
 import com.manekpay.ledger.dto.RecipientType;
+import com.manekpay.ledger.dto.RiskStatusResponse;
 import com.manekpay.ledger.dto.TransferRequest;
 import com.manekpay.ledger.dto.TransferResponse;
 import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.entity.Direction;
 import com.manekpay.ledger.entity.LedgerEntry;
+import com.manekpay.ledger.exception.AccountRestrictedException;
 import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.SelfTransferException;
@@ -84,6 +86,17 @@ class TransferServiceIntegrationTest {
     @BeforeEach
     void stubDefaultFxRate() {
         when(fxRateProvider.getRate(any(), any(), any())).thenReturn(new BigDecimal("2.0000"));
+    }
+
+    @MockBean
+    private RiskServiceClient riskServiceClient;
+
+    // Every test that doesn't specifically exercise restriction needs the sender to look
+    // unrestricted, the same reason fxRateProvider has a default stub above — without this,
+    // every existing test would need its own stub just to get past this new check.
+    @BeforeEach
+    void stubDefaultRiskStatus() {
+        when(riskServiceClient.getRiskStatus(any())).thenReturn(new RiskStatusResponse(false, null));
     }
 
     @Test
@@ -171,6 +184,64 @@ class TransferServiceIntegrationTest {
                         Currency.MYR, Currency.MYR, new BigDecimal("10.0000"), null),
                 "idem-" + UUID.randomUUID()))
                 .isInstanceOf(KycNotApprovedException.class);
+    }
+
+    @Test
+    void restrictedSenderCannotTransfer() {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        UUID sender = UUID.randomUUID();
+        UUID recipient = UUID.randomUUID();
+        accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        creditWallet(sender, Currency.MYR, new BigDecimal("100.0000"));
+        java.time.Instant restrictedUntil = java.time.Instant.now().plusSeconds(3600);
+        when(riskServiceClient.getRiskStatus(sender)).thenReturn(new RiskStatusResponse(true, restrictedUntil));
+
+        assertThatThrownBy(() -> transferService.transfer(sender, "token", Currency.MYR,
+                new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
+                        Currency.MYR, Currency.MYR, new BigDecimal("40.0000"), null),
+                "idem-" + UUID.randomUUID()))
+                .isInstanceOf(AccountRestrictedException.class);
+
+        assertThat(walletFor(sender, Currency.MYR).getBalance()).isEqualByComparingTo("100.0000");
+    }
+
+    @Test
+    void unrestrictedSenderTransfersNormally() {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        UUID sender = UUID.randomUUID();
+        UUID recipient = UUID.randomUUID();
+        accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        creditWallet(sender, Currency.MYR, new BigDecimal("100.0000"));
+        when(riskServiceClient.getRiskStatus(sender)).thenReturn(new RiskStatusResponse(false, null));
+
+        transferService.transfer(sender, "token", Currency.MYR,
+                new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
+                        Currency.MYR, Currency.MYR, new BigDecimal("40.0000"), null),
+                "idem-" + UUID.randomUUID());
+
+        assertThat(walletFor(sender, Currency.MYR).getBalance()).isEqualByComparingTo("60.0000");
+    }
+
+    @Test
+    void transferFailsClosedWhenRiskServiceIsUnreachable() {
+        when(authServiceClient.getLiveKycStatus(any())).thenReturn("APPROVED");
+        UUID sender = UUID.randomUUID();
+        UUID recipient = UUID.randomUUID();
+        accountService.getOrCreateAccount(sender);
+        String recipientAccountNumber = accountService.getOrCreateAccount(recipient).getAccountNumber();
+        creditWallet(sender, Currency.MYR, new BigDecimal("100.0000"));
+        when(riskServiceClient.getRiskStatus(sender))
+                .thenThrow(new com.manekpay.ledger.exception.RiskServiceUnavailableException(new RuntimeException("connection refused")));
+
+        assertThatThrownBy(() -> transferService.transfer(sender, "token", Currency.MYR,
+                new TransferRequest(new RecipientDto(RecipientType.ACCOUNT_NUMBER, recipientAccountNumber),
+                        Currency.MYR, Currency.MYR, new BigDecimal("40.0000"), null),
+                "idem-" + UUID.randomUUID()))
+                .isInstanceOf(com.manekpay.ledger.exception.RiskServiceUnavailableException.class);
+
+        assertThat(walletFor(sender, Currency.MYR).getBalance()).isEqualByComparingTo("100.0000");
     }
 
     @Test

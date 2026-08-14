@@ -24,7 +24,7 @@ class ServiceTokenServiceTest {
     @Test
     void issuesAScopedTokenForValidVaultsServiceCredentials() throws Exception {
         JwtService jwtService = newJwtService();
-        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret");
+        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret", "irrelevant-ledger-secret");
 
         String token = service.issueToken("vaults-service", "correct-secret");
 
@@ -37,7 +37,7 @@ class ServiceTokenServiceTest {
     @Test
     void rejectsAnIncorrectSecret() throws Exception {
         JwtService jwtService = newJwtService();
-        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret");
+        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret", "irrelevant-ledger-secret");
 
         assertThatThrownBy(() -> service.issueToken("vaults-service", "wrong-secret"))
                 .isInstanceOf(InvalidServiceCredentialsException.class);
@@ -46,7 +46,7 @@ class ServiceTokenServiceTest {
     @Test
     void rejectsAnUnrecognizedClientId() throws Exception {
         JwtService jwtService = newJwtService();
-        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret");
+        ServiceTokenService service = new ServiceTokenService(jwtService, "correct-secret", "irrelevant-ledger-secret");
 
         assertThatThrownBy(() -> service.issueToken("some-other-service", "correct-secret"))
                 .isInstanceOf(InvalidServiceCredentialsException.class);

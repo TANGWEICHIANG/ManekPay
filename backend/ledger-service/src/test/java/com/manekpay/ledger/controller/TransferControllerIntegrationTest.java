@@ -1,11 +1,14 @@
 package com.manekpay.ledger.controller;
 
+import com.manekpay.ledger.dto.RiskStatusResponse;
 import com.manekpay.ledger.dto.TransactionCreatedEvent;
 import com.manekpay.ledger.entity.Currency;
 import com.manekpay.ledger.repository.WalletRepository;
 import com.manekpay.ledger.service.AccountService;
 import com.manekpay.ledger.service.AuthServiceClient;
+import com.manekpay.ledger.service.RiskServiceClient;
 import com.manekpay.ledger.service.TransactionEventPublisher;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +70,17 @@ class TransferControllerIntegrationTest {
     private AuthServiceClient authServiceClient;
     @MockBean
     private TransactionEventPublisher eventPublisher;
+    @MockBean
+    private RiskServiceClient riskServiceClient;
+
+    // Every test here transfers money and none of them exercise restriction - without this
+    // default stub, each would 503 on RiskServiceUnavailableException since nothing in this
+    // test environment listens on the real risk-service URL. Mirrors the same pattern in
+    // TransferServiceIntegrationTest.
+    @BeforeEach
+    void stubDefaultRiskStatus() {
+        when(riskServiceClient.getRiskStatus(any())).thenReturn(new RiskStatusResponse(false, null));
+    }
 
     @Test
     void repeatingTheSameIdempotencyKeyReplaysTheCachedResponseInsteadOfTransferringTwice() throws Exception {

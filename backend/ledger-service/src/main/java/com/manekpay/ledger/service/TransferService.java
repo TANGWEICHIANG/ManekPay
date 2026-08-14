@@ -1,6 +1,7 @@
 package com.manekpay.ledger.service;
 
 import com.manekpay.ledger.dto.RecipientDto;
+import com.manekpay.ledger.dto.RiskStatusResponse;
 import com.manekpay.ledger.dto.TransferRequest;
 import com.manekpay.ledger.dto.TransferResponse;
 import com.manekpay.ledger.dto.TransfersResponse;
@@ -12,6 +13,7 @@ import com.manekpay.ledger.entity.LedgerEntry;
 import com.manekpay.ledger.entity.ProxyType;
 import com.manekpay.ledger.entity.Transfer;
 import com.manekpay.ledger.entity.Wallet;
+import com.manekpay.ledger.exception.AccountRestrictedException;
 import com.manekpay.ledger.exception.InsufficientBalanceException;
 import com.manekpay.ledger.exception.KycNotApprovedException;
 import com.manekpay.ledger.exception.RecipientNotFoundException;
@@ -44,11 +46,13 @@ public class TransferService {
     private final LedgerEntryRepository ledgerEntryRepository;
     private final FxRateProvider fxRateProvider;
     private final AuthServiceClient authServiceClient;
+    private final RiskServiceClient riskServiceClient;
 
     public TransferService(AccountService accountService, AccountRepository accountRepository,
                             AccountProxyRepository proxyRepository, WalletRepository walletRepository,
                             TransferRepository transferRepository, LedgerEntryRepository ledgerEntryRepository,
-                            FxRateProvider fxRateProvider, AuthServiceClient authServiceClient) {
+                            FxRateProvider fxRateProvider, AuthServiceClient authServiceClient,
+                            RiskServiceClient riskServiceClient) {
         this.accountService = accountService;
         this.accountRepository = accountRepository;
         this.proxyRepository = proxyRepository;
@@ -57,6 +61,7 @@ public class TransferService {
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.fxRateProvider = fxRateProvider;
         this.authServiceClient = authServiceClient;
+        this.riskServiceClient = riskServiceClient;
     }
 
     @Transactional
@@ -64,6 +69,10 @@ public class TransferService {
                                       TransferRequest request, String idempotencyKey) {
         if (!"APPROVED".equals(authServiceClient.getLiveKycStatus(bearerToken))) {
             throw new KycNotApprovedException();
+        }
+        RiskStatusResponse riskStatus = riskServiceClient.getRiskStatus(customerId);
+        if (riskStatus.restricted()) {
+            throw new AccountRestrictedException(riskStatus.restrictedUntil());
         }
 
         Account senderAccount = accountService.getOrCreateAccount(customerId);
