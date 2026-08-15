@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -61,6 +62,11 @@ class RepositorySmokeTest {
 
     @Test
     @WithMockUser
+    @Transactional
+    // findByIdForUpdate (below) issues a PESSIMISTIC_WRITE query, which JPA requires an active
+    // transaction to run - without this, each repository call above runs in its own short-lived
+    // transaction that's already closed by the time that line executes. This also rolls the whole
+    // test back at the end, so it no longer leaves rows behind for a rerun to collide with.
     void savesAndLoadsAccountWalletsProxyTransferAndLedgerEntries() {
         Account account = accountRepository.save(new Account(UUID.randomUUID(), "100000000001"));
         assertThat(account.getId()).isNotNull();
@@ -77,7 +83,12 @@ class RepositorySmokeTest {
         assertThat(walletRepository.findByAccountIdIsNullAndCurrency(Currency.MYR)).isPresent();
 
         AccountProxy proxy = accountProxyRepository.save(new AccountProxy(account.getId(), ProxyType.MOBILE, "0123456789"));
-        assertThat(accountProxyRepository.findByTypeAndValue(ProxyType.MOBILE, "0123456789")).contains(proxy);
+        // Neither AccountProxy nor LedgerEntry (below) override equals()/hashCode() - compare on
+        // id, the property that actually identifies "the same row", rather than depending on
+        // object identity, which was the whole bug before @Transactional made save() and find()
+        // share one persistence context here.
+        assertThat(accountProxyRepository.findByTypeAndValue(ProxyType.MOBILE, "0123456789").map(AccountProxy::getId))
+                .contains(proxy.getId());
 
         Transfer transfer = transferRepository.save(new Transfer(myrWallet.getId(), usdWallet.getId(),
                 new BigDecimal("100.0000"), Currency.MYR, new BigDecimal("22.0000"), Currency.USD,
@@ -86,7 +97,9 @@ class RepositorySmokeTest {
 
         LedgerEntry debitEntry = ledgerEntryRepository.save(new LedgerEntry(transfer.getId(), myrWallet.getId(),
                 Direction.DEBIT, new BigDecimal("100.0000"), Currency.MYR, new BigDecimal("-100.0000")));
-        assertThat(ledgerEntryRepository.findByWalletId(myrWallet.getId())).containsExactly(debitEntry);
+        assertThat(ledgerEntryRepository.findByWalletId(myrWallet.getId()))
+                .extracting(LedgerEntry::getId)
+                .containsExactly(debitEntry.getId());
 
         Optional<Wallet> lockedWallet = walletRepository.findByIdForUpdate(myrWallet.getId());
         assertThat(lockedWallet).isPresent();
