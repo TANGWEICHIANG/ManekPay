@@ -31,7 +31,12 @@ const NAV_ITEMS: NavItem[] = [
   { to: ROUTES.WEALTH, label: 'Wealth', icon: TrendingUp, activeClasses: 'bg-wealth/10 text-wealth border-wealth' },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  onMobileOpenChange: (open: boolean) => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileOpenChange }: SidebarProps) {
   const navigate = useNavigate();
   const logout = useLogout();
   const [isOpen, setIsOpen] = useState(true);
@@ -42,25 +47,32 @@ export function Sidebar() {
     });
   };
 
+  const toggle = () => {
+    setIsOpen((prev) => !prev);
+    onMobileOpenChange(!mobileOpen);
+  };
+
+  // Below lg, the rail becomes an off-canvas drawer at fixed width, always showing
+  // labels; the isOpen collapse (icon-only rail) is a desktop-only affordance.
   return (
     <nav
-      className={`flex h-screen shrink-0 flex-col border-r border-border bg-surface p-4 transition-all duration-base ease-brand ${isOpen ? 'w-60' : 'w-20'}`}
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-64 shrink-0 -translate-x-full flex-col border-r border-border bg-surface p-4 transition-transform duration-base ease-brand lg:static lg:translate-x-0 lg:transition-[width] ${
+        mobileOpen ? 'translate-x-0' : ''
+      } ${isOpen ? 'lg:w-60' : 'lg:w-20'}`}
     >
       <div className="mb-8 flex items-center justify-between gap-2">
-        {isOpen && (
-          <Link
-            to={ROUTES.DASHBOARD}
-            className="flex min-w-0 items-center text-lg font-extrabold tracking-[-0.03em] transition-opacity duration-fast hover:opacity-80"
-          >
-            <span className="text-foreground">Manek</span>
-            <span className="text-primary">Pay</span>
-          </Link>
-        )}
+        <Link
+          to={ROUTES.DASHBOARD}
+          className={`flex min-w-0 items-center text-lg font-extrabold tracking-[-0.03em] transition-opacity duration-fast hover:opacity-80 ${isOpen ? '' : 'lg:hidden'}`}
+        >
+          <span className="text-foreground">Manek</span>
+          <span className="text-primary">Pay</span>
+        </Link>
         <button
           type="button"
-          onClick={() => setIsOpen((prev) => !prev)}
-          aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-          className={`flex items-center rounded-md px-3 py-2.5 text-muted transition-colors duration-fast hover:bg-surface-hover hover:text-foreground ${isOpen ? 'shrink-0' : 'w-full'}`}
+          onClick={toggle}
+          aria-label={mobileOpen || isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          className={`flex items-center rounded-md px-3 py-2.5 text-muted transition-colors duration-fast hover:bg-surface-hover hover:text-foreground ${isOpen ? 'shrink-0' : 'lg:w-full'}`}
         >
           <Menu className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         </button>
@@ -72,6 +84,7 @@ export function Sidebar() {
               to={item.to}
               end={item.to === ROUTES.DASHBOARD}
               title={item.label}
+              onClick={() => onMobileOpenChange(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-sm font-medium transition-colors duration-fast ${
                   isActive ? item.activeClasses : 'border-transparent text-muted hover:bg-surface-hover hover:text-foreground'
@@ -79,7 +92,7 @@ export function Sidebar() {
               }
             >
               <item.icon className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-              {isOpen && item.label}
+              <span className={isOpen ? '' : 'lg:hidden'}>{item.label}</span>
             </NavLink>
           </li>
         ))}
@@ -92,7 +105,7 @@ export function Sidebar() {
         className="flex items-center justify-center gap-2"
       >
         <LogOut className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
-        {isOpen && 'Log out'}
+        <span className={isOpen ? '' : 'lg:hidden'}>Log out</span>
       </Button>
     </nav>
   );
