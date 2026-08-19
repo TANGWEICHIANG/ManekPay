@@ -57,13 +57,14 @@ export function WealthPage() {
         ) : assetsLoading ? (
           <p className="text-muted">Loading…</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
             {assetsData?.assets.map((asset) => (
-              <Card key={asset.assetId} className="flex flex-col gap-1">
-                <span className="text-sm text-muted">{asset.symbol}</span>
-                <span className="text-foreground">{asset.name}</span>
-                <span className="font-semibold tabular-nums text-foreground">{asset.pricePerShare.toFixed(2)}</span>
-              </Card>
+              <div key={asset.assetId} className="flex flex-col gap-3 bg-surface p-4">
+                <span className="h-1.5 w-1.5 rounded-full bg-wealth" aria-hidden="true" />
+                <span className="font-mono text-xs uppercase tracking-wider text-muted">{asset.symbol}</span>
+                <span className="truncate text-sm text-foreground">{asset.name}</span>
+                <span className="font-mono text-lg font-medium tabular-nums text-foreground">{asset.pricePerShare.toFixed(2)}</span>
+              </div>
             ))}
           </div>
         )}
@@ -118,7 +119,7 @@ export function WealthPage() {
                   <span className="text-foreground">
                     {h.assetSymbol} — {h.assetName}
                   </span>
-                  <span className="tabular-nums text-foreground">{h.shares.toFixed(4)} shares</span>
+                  <span className="font-mono tabular-nums text-foreground">{h.shares.toFixed(4)} shares</span>
                 </Card>
               ))}
             </div>

@@ -1,83 +1,42 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeftRight, ArrowRight, PiggyBank, ShieldAlert, TrendingUp, Wallet, type LucideIcon } from 'lucide-react';
-import { Card } from '../atoms/Card';
 import { Badge } from '../atoms/Badge';
 import { Button } from '../atoms/Button';
+import { BeadRow } from '../atoms/BeadRow';
 import { useMe } from '../../hooks/useAuth';
+import { useMyAccount } from '../../hooks/useLedger';
 import { ROUTES } from '../../constants/routes';
 import { KycStatus } from '../../constants/enums';
 
 interface ModuleLink {
   to: string;
   label: string;
-  description: string;
   icon: LucideIcon;
-  iconWrapClasses: string;
-  hoverBorderClass: string;
+  accentClass: string;
 }
 
 const MODULES: ModuleLink[] = [
-  {
-    to: ROUTES.LEDGER,
-    label: 'Ledger',
-    description: 'Wallets & transfers',
-    icon: Wallet,
-    iconWrapClasses: 'text-ledger bg-ledger/10',
-    hoverBorderClass: 'hover:border-ledger/50',
-  },
-  {
-    to: ROUTES.FX,
-    label: 'FX',
-    description: 'Live rates & locks',
-    icon: ArrowLeftRight,
-    iconWrapClasses: 'text-fx bg-fx/10',
-    hoverBorderClass: 'hover:border-fx/50',
-  },
-  {
-    to: ROUTES.VAULTS,
-    label: 'Vaults',
-    description: 'Spare-change savings',
-    icon: PiggyBank,
-    iconWrapClasses: 'text-vaults bg-vaults/10',
-    hoverBorderClass: 'hover:border-vaults/50',
-  },
-  {
-    to: ROUTES.RISK,
-    label: 'Risk',
-    description: 'Account protection',
-    icon: ShieldAlert,
-    iconWrapClasses: 'text-risk bg-risk/10',
-    hoverBorderClass: 'hover:border-risk/50',
-  },
-  {
-    to: ROUTES.WEALTH,
-    label: 'Wealth',
-    description: 'Fractional investing',
-    icon: TrendingUp,
-    iconWrapClasses: 'text-wealth bg-wealth/10',
-    hoverBorderClass: 'hover:border-wealth/50',
-  },
+  { to: ROUTES.LEDGER, label: 'Ledger', icon: Wallet, accentClass: 'text-ledger' },
+  { to: ROUTES.FX, label: 'FX', icon: ArrowLeftRight, accentClass: 'text-fx' },
+  { to: ROUTES.VAULTS, label: 'Vaults', icon: PiggyBank, accentClass: 'text-vaults' },
+  { to: ROUTES.RISK, label: 'Risk', icon: ShieldAlert, accentClass: 'text-risk' },
+  { to: ROUTES.WEALTH, label: 'Wealth', icon: TrendingUp, accentClass: 'text-wealth' },
 ];
 
 export function DashboardPage() {
-  const { data: user, isLoading } = useMe();
+  const { data: user, isLoading: userLoading } = useMe();
+  const { data: account, isLoading: accountLoading } = useMyAccount();
 
-  if (isLoading || !user) {
+  if (userLoading || accountLoading || !user) {
     return <p className="text-foreground">Loading…</p>;
   }
 
+  const totalBalance = account?.wallets.reduce((sum, w) => sum + w.balance, 0) ?? 0;
+
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <p className="text-sm font-medium text-muted">Welcome back</p>
-        <h1 className="text-3xl font-bold text-foreground">{user.fullName}</h1>
-      </div>
-
-      <Card className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm text-muted">Account</span>
-          <span className="text-foreground">{user.email}</span>
-        </div>
+      <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-end sm:justify-between">
+        <h1 className="text-3xl font-bold text-foreground">Welcome back, {user.fullName}</h1>
         <div className="flex items-center gap-3">
           <Badge status={user.kycStatus} />
           {user.kycStatus !== KycStatus.APPROVED && (
@@ -86,28 +45,47 @@ export function DashboardPage() {
             </Link>
           )}
         </div>
-      </Card>
+      </div>
+
+      {account && (
+        <div>
+          <h2 className="mb-3 text-lg font-medium text-foreground">Wallets</h2>
+          {/* The frame: one rod per currency. Balance is the fact, in tabular mono numerals;
+              the bead row beneath is the wallet's real share of total balance across currencies
+              - a genuine fraction, not a decorative flourish. */}
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
+            {account.wallets.map((wallet) => (
+              <div key={wallet.currency} className="flex flex-col gap-3 bg-surface p-4">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                <span className="font-mono text-xs uppercase tracking-wider text-muted">{wallet.currency}</span>
+                <span className="font-mono text-xl font-medium tabular-nums text-foreground">{wallet.balance.toFixed(2)}</span>
+                <BeadRow
+                  fraction={totalBalance > 0 ? wallet.balance / totalBalance : 0}
+                  colorClass="bg-primary"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-foreground">Modules</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 className="mb-3 text-lg font-medium text-foreground">Modules</h2>
+        {/* Quick actions as one rod of function keys rather than a card grid. */}
+        <div className="flex flex-col divide-y divide-border overflow-hidden rounded-md border border-border bg-surface sm:flex-row sm:divide-x sm:divide-y-0">
           {MODULES.map((mod) => (
-            <Link key={mod.to} to={mod.to}>
-              <Card
-                className={`group flex h-full flex-col gap-4 transition-all duration-base ease-brand hover:-translate-y-0.5 ${mod.hoverBorderClass}`}
-              >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-md ${mod.iconWrapClasses}`}>
-                  <mod.icon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <span className="font-semibold text-foreground">{mod.label}</span>
-                  <span className="text-sm text-muted">{mod.description}</span>
-                </div>
-                <span className="mt-auto flex items-center gap-1 text-sm font-medium text-muted transition-colors duration-fast group-hover:text-foreground">
-                  Open
-                  <ArrowRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-                </span>
-              </Card>
+            <Link
+              key={mod.to}
+              to={mod.to}
+              className="group flex flex-1 items-center gap-3 p-4 transition-colors duration-fast hover:bg-surface-hover"
+            >
+              <mod.icon className={`h-5 w-5 shrink-0 ${mod.accentClass}`} strokeWidth={2} aria-hidden="true" />
+              <span className="font-semibold text-foreground">{mod.label}</span>
+              <ArrowRight
+                className="ml-auto h-4 w-4 shrink-0 text-muted transition-transform duration-fast group-hover:translate-x-0.5 group-hover:text-foreground"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
             </Link>
           ))}
         </div>

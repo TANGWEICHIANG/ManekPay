@@ -65,7 +65,7 @@ export function FxPage() {
               Could not load the current rate. Please try again shortly.
             </p>
           ) : rate ? (
-            <p className="tabular-nums text-foreground">
+            <p className="font-mono tabular-nums text-foreground">
               1 {from} = {rate.rate} {to} — {amount || 0} {from} ≈ {converted} {to}
             </p>
           ) : null}
@@ -82,7 +82,7 @@ export function FxPage() {
           </Button>
           <div aria-live="polite">
             {createLock.data && (
-              <p className="text-sm tabular-nums text-muted">
+              <p className="text-sm font-mono tabular-nums text-muted">
                 Locked {createLock.data.rate} {createLock.data.to} per {createLock.data.from} until{' '}
                 {new Date(createLock.data.expiresAt).toLocaleTimeString()} (lock{' '}
                 {createLock.data.lockId.slice(0, 8)})
