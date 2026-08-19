@@ -5,6 +5,7 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
 import { PageHeader } from '../atoms/PageHeader';
+import { BeadRow } from '../atoms/BeadRow';
 import { isVaultNotFound, useCreateGoal, useGoals, useMyVault, useUpdateGoal } from '../../hooks/useVaults';
 import { Currency } from '../../constants/enums';
 import type { Goal, SweepFrequency } from '../../store/models/vaults.model';
@@ -51,7 +52,7 @@ export function VaultsPage() {
       ) : vault ? (
         <Card className="flex flex-col gap-1">
           <span className="text-sm text-muted">{vault.currency} vault</span>
-          <span className="text-3xl font-semibold tabular-nums text-foreground">{vault.balance.toFixed(2)}</span>
+          <span className="text-3xl font-semibold font-mono tabular-nums text-foreground">{vault.balance.toFixed(2)}</span>
         </Card>
       ) : (
         <Card>
@@ -144,9 +145,7 @@ interface GoalCardProps {
 function GoalCard({ goal }: GoalCardProps) {
   const updateGoal = useUpdateGoal();
 
-  const progress = goal.targetAmount > 0
-    ? Math.min(100, (goal.balance / goal.targetAmount) * 100)
-    : 0;
+  const fraction = goal.targetAmount > 0 ? goal.balance / goal.targetAmount : 0;
 
   return (
     <Card className="flex flex-col gap-3">
@@ -161,16 +160,14 @@ function GoalCard({ goal }: GoalCardProps) {
         </Button>
       </div>
       <div className="flex items-center justify-between text-sm text-muted">
-        <span className="tabular-nums">
+        <span className="font-mono tabular-nums">
           {goal.balance.toFixed(2)} / {goal.targetAmount.toFixed(2)} {goal.currency}
         </span>
-        <span className="tabular-nums">
+        <span className="font-mono tabular-nums">
           {goal.sweepAmount.toFixed(2)} {goal.currency} / {goal.sweepFrequency.toLowerCase()}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-hover">
-        <div className="h-full rounded-full bg-vaults" style={{ width: `${progress}%` }} />
-      </div>
+      <BeadRow fraction={fraction} colorClass="bg-vaults" />
       {updateGoal.isError && (
         <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
           {updateGoal.error instanceof Error ? updateGoal.error.message : 'Could not update goal'}

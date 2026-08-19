@@ -5,6 +5,7 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { Select } from '../atoms/Select';
 import { PageHeader } from '../atoms/PageHeader';
+import { BeadRow } from '../atoms/BeadRow';
 import { useMyAccount, useFxRate, useCreateTransfer, useTransfers } from '../../hooks/useLedger';
 import { Currency } from '../../constants/enums';
 import type { RecipientType } from '../../store/models/ledger.model';
@@ -75,18 +76,25 @@ export function LedgerPage() {
     return <p className="text-foreground">Loading…</p>;
   }
 
+  const totalBalance = account.wallets.reduce((sum, w) => sum + w.balance, 0);
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader icon={Wallet} iconClasses="bg-ledger/10 text-ledger" title="Ledger" />
 
       <div>
         <h2 className="mb-3 text-lg font-medium text-foreground">Balances</h2>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-border bg-border sm:grid-cols-3 lg:grid-cols-5">
           {account.wallets.map((wallet) => (
-            <Card key={wallet.currency} className="flex flex-col gap-1">
-              <span className="text-sm text-muted">{wallet.currency}</span>
-              <span className="text-xl font-semibold tabular-nums text-foreground">{wallet.balance.toFixed(2)}</span>
-            </Card>
+            <div key={wallet.currency} className="flex flex-col gap-3 bg-surface p-4">
+              <span className="h-1.5 w-1.5 rounded-full bg-ledger" aria-hidden="true" />
+              <span className="font-mono text-xs uppercase tracking-wider text-muted">{wallet.currency}</span>
+              <span className="font-mono text-xl font-medium tabular-nums text-foreground">{wallet.balance.toFixed(2)}</span>
+              <BeadRow
+                fraction={totalBalance > 0 ? wallet.balance / totalBalance : 0}
+                colorClass="bg-ledger"
+              />
+            </div>
           ))}
         </div>
       </div>
@@ -185,7 +193,7 @@ export function LedgerPage() {
           />
           {fxRate && destCurrency !== sourceCurrency && amount && (
             <p className="text-sm text-muted">
-              Recipient gets ≈ <span className="tabular-nums">{(Number(amount) * fxRate.rate).toFixed(2)}</span> {destCurrency}
+              Recipient gets ≈ <span className="font-mono tabular-nums">{(Number(amount) * fxRate.rate).toFixed(2)}</span> {destCurrency}
             </p>
           )}
           <Button type="submit" isLoading={createTransfer.isPending}>
@@ -201,14 +209,14 @@ export function LedgerPage() {
             {transfersData.transfers.map((t) => (
               <Card key={t.transferId} className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <span className="tabular-nums text-foreground">
+                  <span className="font-mono tabular-nums text-foreground">
                     {t.sourceAmount} {t.sourceCurrency} → {t.destAmount} {t.destCurrency}
                   </span>
                   <span className="text-sm text-muted">{new Date(t.createdAt).toLocaleString()}</span>
                 </div>
                 {t.topUpAmount != null && t.topUpCurrency != null && (
                   <span className="text-sm text-muted">
-                    <span className="tabular-nums">{t.topUpAmount.toFixed(2)}</span> {t.topUpCurrency} converted from your {t.topUpCurrency} wallet to cover this transfer.
+                    <span className="font-mono tabular-nums">{t.topUpAmount.toFixed(2)}</span> {t.topUpCurrency} converted from your {t.topUpCurrency} wallet to cover this transfer.
                   </span>
                 )}
               </Card>
