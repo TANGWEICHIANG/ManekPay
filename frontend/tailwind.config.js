@@ -14,6 +14,7 @@ export default {
         success: 'rgb(var(--color-success) / <alpha-value>)',
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
+        stamp: 'rgb(var(--color-stamp) / <alpha-value>)',
         ledger: 'rgb(var(--color-ledger) / <alpha-value>)',
         fx: 'rgb(var(--color-fx) / <alpha-value>)',
         vaults: 'rgb(var(--color-vaults) / <alpha-value>)',
@@ -26,15 +27,20 @@ export default {
       },
       fontFamily: {
         sans: ['"Rethink Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        // Every numeral, currency code, and account/reference number renders in this face -
+        // the counting frame's rigid column grid depends on tabular, monospaced figures.
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       borderRadius: {
-        sm: '6px',
-        md: '10px',
-        lg: '16px',
+        // Rectilinear on purpose: rods and frames have definite edges, not soft plastic corners.
+        sm: '2px',
+        md: '3px',
+        lg: '5px',
       },
       boxShadow: {
-        card: '0 1px 2px rgb(0 0 0 / 0.16), 0 1px 1px rgb(0 0 0 / 0.08)',
-        glow: '0 0 0 1px rgb(var(--color-primary) / 0.4), 0 0 24px -6px rgb(var(--color-primary) / 0.5)',
+        // Hairline elevation, not soft blur - a counting frame's rods sit flush, they don't float.
+        card: '0 0 0 1px rgb(var(--color-border))',
+        glow: '0 0 0 1px rgb(var(--color-primary) / 0.5), 0 0 16px -6px rgb(var(--color-primary) / 0.6)',
       },
       transitionDuration: {
         fast: '120ms',

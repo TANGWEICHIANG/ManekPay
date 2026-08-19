@@ -8,11 +8,14 @@
   --color-surface-hover: 238 240 247;
   --color-foreground: 18 23 43;
   --color-muted: 91 97 120;
-  --color-border: 226 229 239;
+  --color-border: 219 223 235;
   --color-primary: 8 145 178;
   --color-success: 5 150 105;
   --color-warning: 217 119 6;
   --color-danger: 225 29 72;
+  /* Stamp-ink: the counting frame's mark of verification (KYC cleared, transfer
+     confirmed) - a customs-clearance red, never used for money-negative states. */
+  --color-stamp: 191 63 42;
   --color-ledger: 37 99 235;
   --color-fx: 5 150 105;
   --color-vaults: 217 119 6;
@@ -32,12 +35,13 @@
     --color-surface: 19 26 44;
     --color-surface-hover: 27 36 64;
     --color-foreground: 231 234 243;
-    --color-muted: 139 147 172;
-    --color-border: 35 44 71;
-    --color-primary: 34 211 238;
+    --color-muted: 148 156 181;
+    --color-border: 40 50 79;
+    --color-primary: 0 229 255;
     --color-success: 52 211 153;
     --color-warning: 251 191 36;
     --color-danger: 251 113 133;
+    --color-stamp: 232 121 98;
     --color-ledger: 96 165 250;
     --color-fx: 52 211 153;
     --color-vaults: 251 191 36;
