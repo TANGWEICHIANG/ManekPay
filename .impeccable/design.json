@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-19T00:00:00Z",
+  "title": "Design System: ManekPay",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Bead-Light Cyan",
+        "canonical": "rgb(8 145 178)",
+        "tonalRamp": ["rgb(6 40 48)", "rgb(6 66 80)", "rgb(7 95 113)", "rgb(8 145 178)", "rgb(34 170 200)", "rgb(90 195 220)", "rgb(150 220 238)", "rgb(210 245 250)"]
+      },
+      "brand-start": {
+        "role": "secondary",
+        "displayName": "Navy Frame",
+        "canonical": "rgb(11 15 26)",
+        "tonalRamp": ["rgb(4 5 10)", "rgb(8 10 18)", "rgb(11 15 26)", "rgb(19 26 44)", "rgb(40 50 79)", "rgb(91 97 120)", "rgb(148 156 181)", "rgb(231 234 243)"]
+      },
+      "stamp": {
+        "role": "tertiary",
+        "displayName": "Stamp-Ink Vermillion",
+        "canonical": "rgb(191 63 42)",
+        "tonalRamp": ["rgb(46 15 10)", "rgb(80 27 18)", "rgb(130 44 30)", "rgb(191 63 42)", "rgb(215 100 82)", "rgb(232 121 98)", "rgb(240 160 145)", "rgb(250 210 200)"]
+      },
+      "module-ledger": { "role": "accent", "displayName": "Ledger Blue", "canonical": "rgb(37 99 235)", "tonalRamp": [] },
+      "module-fx": { "role": "accent", "displayName": "FX Green", "canonical": "rgb(5 150 105)", "tonalRamp": [] },
+      "module-vaults": { "role": "accent", "displayName": "Vaults Amber", "canonical": "rgb(217 119 6)", "tonalRamp": [] },
+      "module-risk": { "role": "accent", "displayName": "Risk Rose", "canonical": "rgb(225 29 72)", "tonalRamp": [] },
+      "module-wealth": { "role": "accent", "displayName": "Wealth Violet", "canonical": "rgb(124 58 237)", "tonalRamp": [] }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body / UI", "purpose": "All prose, labels, headings, nav — Rethink Sans." },
+      "numeral": { "displayName": "Numeral / Mono", "purpose": "Every numeral, currency code, and reference identifier only — IBM Plex Mono, tabular-nums." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 0 0 1px rgb(var(--color-border))", "purpose": "Resting hairline elevation for Card, wallet cells, bordered containers." },
+      { "name": "glow", "value": "0 0 0 1px rgb(var(--color-primary) / 0.5), 0 0 16px -6px rgb(var(--color-primary) / 0.6)", "purpose": "Hover-only feedback on primary/danger buttons." }
+    ],
+    "motion": [
+      { "name": "duration-fast", "value": "120ms", "purpose": "Hover/focus color transitions, nav item state." },
+      { "name": "duration-base", "value": "200ms", "purpose": "Sidebar collapse, button active-state." },
+      { "name": "duration-slow", "value": "350ms", "purpose": "Reserved for larger layout transitions." },
+      { "name": "ease-brand", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Default easing across transitions." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Default call-to-action button; cyan fill, hover glow.",
+      "html": "<button class=\"ds-btn-primary\">Send</button>",
+      "css": ".ds-btn-primary { background: rgb(8 145 178); color: rgb(247 248 252); border: none; border-radius: 3px; padding: 0.5rem 1rem; font-weight: 600; font-family: 'Rethink Sans', ui-sans-serif, system-ui, sans-serif; transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { box-shadow: 0 0 0 1px rgb(8 145 178 / 0.5), 0 0 16px -6px rgb(8 145 178 / 0.6); } .ds-btn-primary:focus-visible { outline: 2px solid rgb(8 145 178); outline-offset: 2px; } .ds-btn-primary:active { transform: scale(0.98); } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Transparent-fill button for secondary actions (Pause/Resume, Log out).",
+      "html": "<button class=\"ds-btn-secondary\">Pause</button>",
+      "css": ".ds-btn-secondary { background: transparent; color: rgb(18 23 43); border: 1px solid rgb(219 223 235); border-radius: 3px; padding: 0.5rem 1rem; font-weight: 600; font-family: 'Rethink Sans', ui-sans-serif, system-ui, sans-serif; transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-secondary:hover { background: rgb(238 240 247); border-color: rgb(8 145 178 / 0.4); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Standard bordered container: forms, goal cards, transaction rows.",
+      "html": "<div class=\"ds-card\">Card content</div>",
+      "css": ".ds-card { background: rgb(255 255 255); border: 1px solid rgb(219 223 235); border-radius: 5px; box-shadow: 0 0 0 1px rgb(219 223 235); padding: 1.5rem; }"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labeled text input with error state.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-amount\">Amount</label><input id=\"ds-amount\" type=\"text\" placeholder=\"0.00\" /></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 0.375rem; font-family: 'Rethink Sans', ui-sans-serif, system-ui, sans-serif; } .ds-field label { font-size: 0.875rem; font-weight: 500; color: rgb(18 23 43); } .ds-field input { background: rgb(255 255 255); color: rgb(18 23 43); border: 1px solid rgb(219 223 235); border-radius: 3px; padding: 0.5rem 0.75rem; transition: border-color 120ms; } .ds-field input:hover { border-color: rgb(91 97 120); } .ds-field input:focus-visible { outline: 2px solid rgb(8 145 178); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Per-module nav link with fixed accent color on active state (module-specific left border + tint).",
+      "html": "<a href=\"#\" class=\"ds-nav-item ds-nav-item--active\"><span>Ledger</span></a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 0.75rem; border-left: 2px solid transparent; border-radius: 3px; padding: 0.625rem 0.75rem; font-size: 0.875rem; font-weight: 500; color: rgb(91 97 120); font-family: 'Rethink Sans', ui-sans-serif, system-ui, sans-serif; transition: color 120ms, background-color 120ms; } .ds-nav-item:hover { background: rgb(238 240 247); color: rgb(18 23 43); } .ds-nav-item--active { border-left-color: rgb(37 99 235); background: rgb(37 99 235 / 0.1); color: rgb(37 99 235); }"
+    },
+    {
+      "name": "BeadRow",
+      "kind": "custom",
+      "refersTo": "bead-row",
+      "description": "Discrete bead-fill progress mark for a genuine fraction-of-N (wallet share of total, vault goal progress). Never decorative.",
+      "html": "<div class=\"ds-bead-row\" role=\"img\" aria-label=\"60% complete\"><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead ds-bead--filled\"></span><span class=\"ds-bead\"></span><span class=\"ds-bead\"></span><span class=\"ds-bead\"></span><span class=\"ds-bead\"></span></div>",
+      "css": ".ds-bead-row { display: flex; align-items: center; gap: 0.25rem; } .ds-bead { height: 0.5rem; width: 0.5rem; border-radius: 9999px; border: 1px solid rgb(219 223 235); background: transparent; } .ds-bead--filled { background: rgb(8 145 178); border-color: transparent; }"
+    },
+    {
+      "name": "Wallet Rod Cell",
+      "kind": "card",
+      "refersTo": "wallet-rod",
+      "description": "One currency cell in the hairline rod-grid: accent dot, mono currency code, mono balance, BeadRow.",
+      "html": "<div class=\"ds-wallet-cell\"><span class=\"ds-wallet-dot\"></span><span class=\"ds-wallet-code\">MYR</span><span class=\"ds-wallet-balance\">1,204.50</span></div>",
+      "css": ".ds-wallet-cell { display: flex; flex-direction: column; gap: 0.75rem; background: rgb(255 255 255); padding: 1rem; } .ds-wallet-dot { height: 0.375rem; width: 0.375rem; border-radius: 9999px; background: rgb(8 145 178); } .ds-wallet-code { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: rgb(91 97 120); } .ds-wallet-balance { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; color: rgb(18 23 43); }"
+    },
+    {
+      "name": "Badge (Approved Stamp)",
+      "kind": "chip",
+      "refersTo": "badge-approved",
+      "description": "KYC status pill; APPROVED renders a rotated stamp icon instead of the shared dot marker.",
+      "html": "<span class=\"ds-badge ds-badge--approved\"><svg class=\"ds-badge-stamp\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.25\"><rect x=\"5\" y=\"5\" width=\"14\" height=\"14\" rx=\"2\"/><path d=\"M9 12l2 2 4-4\"/></svg>APPROVED</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 0.375rem; border-radius: 2px; padding: 0.25rem 0.625rem; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em; } .ds-badge--approved { border: 1px solid rgb(191 63 42 / 0.5); background: rgb(191 63 42 / 0.1); color: rgb(191 63 42); } .ds-badge-stamp { height: 0.75rem; width: 0.75rem; transform: rotate(-12deg); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Counting Frame",
+    "overview": "ManekPay's shipped visual system reads as a suanpan (counting frame): currencies are rods, balances are discrete beads, and the whole product refuses the soft gradient card-grid every neobank ships. The frame is a navy-and-cyan instrument that displays exact figures in tabular mono numerals rather than gesturing at wealth with big rounded panels — the interface wants to be trusted like a precise tool, not liked like a toy. This is a flat, rectilinear, hairline-bordered system. There is no glassmorphism, no soft blur shadow, no card floating above a gradient backdrop. Depth is conveyed by a single 1px border ring (shadow-card), not by elevation. The one deliberately warm, non-navy/cyan mark is the stamp-ink vermillion used exclusively for the KYC-approved state — a customs-clearance stamp, not a routine status pill, and never repurposed for a money-negative state. The system's discipline is legibility over ornament: every numeral renders in IBM Plex Mono for tabular alignment, every wallet balance sits beside a real bead-fill fraction (never a decorative one), and the five functional modules (Ledger, FX, Vaults, Risk, Wealth) each carry one fixed accent hue used consistently across sidebar nav, page icon, and page-local data marks.",
+    "keyCharacteristics": [
+      "Rectilinear, tight-radius geometry (2-5px) - rods and frames have definite edges, not soft plastic corners.",
+      "Hairline 1px border elevation only; no blurred/soft box-shadow ever used for depth.",
+      "IBM Plex Mono strictly scoped to numerals, currency codes, and reference numbers - never prose, headers, or nav labels.",
+      "Discrete bead-fill (BeadRow) as the system's one custom data mark, used only where a real fraction-of-N exists.",
+      "Per-module fixed accent color (ledger blue, fx green, vaults amber, risk rose, wealth violet) carried consistently from sidebar to page icon to page-local marks."
+    ],
+    "rules": [
+      { "name": "The One Stamp Rule", "body": "Stamp-ink vermillion marks exactly one state system-wide - KYC APPROVED. It is not a general \"success\" or \"verified\" color; success/positive states elsewhere use success green.", "section": "colors" },
+      { "name": "The Module Accent Consistency Rule", "body": "A module's accent color, once assigned (Sidebar NAV_ITEMS), must be reused for that module's PageHeader icon chip and any page-local data mark on that module's page. Accents are not decorative - they are the wayfinding system across five concurrent currency/module contexts.", "section": "colors" },
+      { "name": "The Every-Numeral Rule", "body": "IBM Plex Mono renders every numeral, currency code, and reference/account identifier in the product - and nothing else. A prose sentence, a section header, or a nav label never switches face mid-string; only the digits/codes within do.", "section": "typography" },
+      { "name": "The Flush Rod Rule", "body": "Surfaces sit at the same visual plane as their frame at rest. Depth is a hairline border, never a blurred shadow; any glow appears only as a hover response, never as ambient decoration.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do render every numeral, currency code, and reference/account identifier in IBM Plex Mono with tabular-nums; keep prose, headers, and nav labels in Rethink Sans.",
+      "Do reuse a module's fixed accent color (ledger/fx/vaults/risk/wealth) consistently across its sidebar nav state, PageHeader icon chip, and any page-local data mark.",
+      "Do use BeadRow only where a genuine fraction-of-N exists (wallet share of total, goal progress toward target); render every other quantity as a plain mono numeral.",
+      "Do keep elevation to the 1px shadow-card hairline at rest; reserve shadow-glow for hover-only interactive feedback.",
+      "Do keep corner radii at or below 5px (sm 2px / md 3px / lg 5px) across all components."
+    ],
+    "donts": [
+      "Don't apply IBM Plex Mono to prose, section headers, or nav labels - it is scoped strictly to numerals and short data-identifiers, corrected during finish review after an earlier draft over-applied it as decorative \"technical costume.\"",
+      "Don't use a blurred/soft box-shadow for resting elevation anywhere; this system conveys depth with hairline borders only, not floating cards.",
+      "Don't introduce kicker/eyebrow labels above headings - none exist in the shipped system.",
+      "Don't repurpose stamp-ink vermillion for any state other than KYC APPROVED; it is not a general \"success\" or \"verified\" color.",
+      "Don't render Dashboard's module quick-links as a card grid - the shipped pattern is a single flat function-key row with hairline dividers, not separated tiles."
+    ]
+  }
+}
